@@ -1,0 +1,97 @@
+<tool id="cb_ivr" name="IVR" version="0.0.0" profile = "20.01">
+    <description>indicator</description>
+    <requirements>
+        <requirement type="package" version="1.0.10">r-dplyr</requirement>
+        <requirement type="package" version="1.2.1">r-tidyr</requirement>
+        <requirement type="package" version="2.1.2">r-readr</requirement>
+        <requirement type="package" version="1.4.0">r-writexl</requirement>
+        <requirement type="package" version="1.4.1">r-stringr</requirement>
+        <requirement type="package" version="1.4.1">r-readxl</requirement>
+        <requirement type="package" version="3.1.8">r-tibble</requirement>
+        <requirement type="package" version="1.8.0">r-lubridate</requirement>
+        <requirement type="package" version="1.1.1">r-cowplot</requirement>
+        <requirement type="package" version="2.0.3">r-magrittr</requirement>
+        <requirement type="package" version="2.16">r-rmarkdown</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript
+            '$__tool_directory__/cb_ivr.r'
+            '$input_data'
+            '$input_data2'
+            '$fiche_val'
+            '$fiche_term'
+            '$__tool_directory__/loop_col_scale.r'
+            '$__tool_directory__/cb_ivr_site_report_col_scale_loop.Rmd'
+            '$output_ivr'
+            '$plots'
+            '$output_rds'
+        ]]>
+    </command>
+    <inputs>
+        <param name="input_data" type="data" format="data" label="Input data valid"/>
+        <param name="input_data2" type="data" format="data" label="Input data finish"/>
+        <param name="fiche_val" type="data" format="data" label="Input data field valid"/>
+        <param name="fiche_term" type="data" format="data" label="Input data field finish"/>
+    </inputs>
+    <outputs>
+        <data name="output_ivr" from_work_dir="Valeurs_stat.tabular" format="tabular" label="IVR"/>
+        <collection type="list" name="plots" label="IVR plot">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+        <collection type="list" name="output_rds" label="IVR .RDS data">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.RDS" visible="false" format="Rdata"/>
+        </collection>
+        <!--<collection type="list" name="output_doc" label="Reports">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.docx" visible="false" format="pdf"/>
+        </collection>-->
+    </outputs>
+    <tests>
+        <test>
+            <param name="input_data" value="champbloc_ivr_val.csv"/>
+            <param name="input_data2" value="champbloc_ivr.csv"/>
+            <param name="fiche_val" value="ficheterrain_val.csv"/>
+            <param name="fiche_term" value="ficheterrain.csv"/>
+            <output name="output_ivr">
+                <assert_contents>
+                    <has_n_columns n="23"/>
+                </assert_contents>
+            </output>
+            <output_collection name="plots" type="list" count="44"/>
+            <output_collection name="output_rds" type="list" count="3"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+=================
+IVR indicator
+=================
+
+
+**What it does**
+
+Calculates the IVR indicator
+
+**Input description**
+
+Four input files in csv format.
+
++--------------+----------++--------------+---------------+
+|      CSV     |    CSV   |      CSV       |      CSV     |
++==============+==========+================+==============+
+|   validate   | finish   | field validate | field finish |
++--------------+----------+----------------+--------------+
+|      ...     |    ...   |      ...       |      ...     |
++--------------+----------+----------------+--------------+
+
+
+**Output**
+
+- .RDS files 3 of them for the ivr
+- 1 tabilar file for the last cacul on ivr
+- Multiple png plots one for each of the locations
+
+
+    ]]>    </help>
+    <citations>
+        <citation type="doi">doi.org/10.1016/j.rse.2013.09.022</citation>
+    </citations>
+</tool>

@@ -1,0 +1,88 @@
+<tool id="cb_freq" name="Freq" version="0.0.0" profile = "20.01">
+    <description>things</description>
+    <requirements>
+        <requirement type="package" version="1.0.10">r-dplyr</requirement>
+        <requirement type="package" version="1.2.1">r-tidyr</requirement>
+        <requirement type="package" version="1.14.2">r-data.table</requirement>
+        <requirement type="package" version="1.4.1">r-stringr</requirement>
+        <requirement type="package" version="1.4.1">r-readxl</requirement>
+        <requirement type="package" version="3.1.8">r-tibble</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript
+            '$__tool_directory__/cb_freq.r'
+            '$input_hab'
+            '$input_site'
+            '$input_soussite'
+            '$fiche_val'
+            '$input_hab_term'
+            '$input_site_term'
+            '$input_soussite_term'
+            '$input_obs'
+            '$input_obs_term'
+            '$fiche_term'
+            '$output_freq'
+            '$plots'
+        ]]>
+    </command>
+    <inputs>
+        <param name="input_hab" type="data" format="tabular" label="Input habitat valid"/>
+        <param name="input_site" type="data" format="tabular" label="Input site valid"/>
+        <param name="input_soussite" type="data" format="tabular" label="Input sub site valid"/>
+        <param name="fiche_val" type="data" format="tabular" label="Input data field valid"/>
+        <param name="input_hab_term" type="data" format="tabular" label="Input habitat finish"/>
+        <param name="input_site_term" type="data" format="tabular" label="Input site finish"/>
+        <param name="input_soussite_term" type="data" format="tabular" label="Input sub site finish"/>
+        <param name="input_obs" type="data" format="tabular" label="Input data observation valid"/>
+        <param name="input_obs_term" type="data" format="tabular" label="Input data observation finish"/>
+        <param name="fiche_term" type="data" format="tabular" label="Input data field finish"/>
+    </inputs>
+    <outputs>
+        <data name="output_freq" from_work_dir="Valeurs_stat.tabular" format="txt" label="FREQ"/>
+        <collection type="list" name="plots" label="FREQ plot">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+    </outputs>
+    <tests>
+        <test>
+            <param name="input_data" value=""/>
+            <param name="input_data2" value=""/>
+            <param name="fiche_val" value=""/>
+            <param name="fiche_term" value=""/>
+            <output name="output_freq">
+                <assert_contents>
+                    <has_n_columns n="3"/>
+                </assert_contents>
+            </output>
+            <output_collection name="plots" type="list" count="3"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+========================================================================
+
+========================================================================
+
+
+**What it does**
+
+
+
+**Input description**
+
+
+
++--------------+----------+
+|      BIL     | ENVI HDR |
++==============+==========+
+| raster stack | Metadata |
++--------------+----------+
+|      ...     |    ...   |
++--------------+----------+
+
+**Output**
+
+
+
+    ]]>    </help>
+
+</tool>

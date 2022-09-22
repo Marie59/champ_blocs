@@ -1,0 +1,89 @@
+<tool id="cb_qecb" name="QECB and ecology" version="0.0.0" profile = "20.01">
+    <description>things</description>
+    <requirements>
+        <requirement type="package" version="1.0.10">r-dplyr</requirement>
+        <requirement type="package" version="1.2.1">r-tidyr</requirement>
+        <requirement type="package" version="2.1.2">r-readr</requirement>
+        <requirement type="package" version="1.4.0">r-writexl</requirement>
+        <requirement type="package" version="1.4.1">r-stringr</requirement>
+        <requirement type="package" version="1.4.1">r-readxl</requirement>
+        <requirement type="package" version="3.1.8">r-tibble</requirement>
+        <requirement type="package" version="1.8.0">r-lubridate</requirement>
+        <requirement type="package" version="1.1.1">r-cowplot</requirement>
+        <!--<requirement type="package" version="">r-hablar</requirement>-->
+        <requirement type="package" version="2.16">r-rmarkdown</requirement>
+        <requirement type="package" version="2.6_2">r-vegan</requirement>
+        <requirement type="package" version="1.4.4">r-reshape2</requirement>
+        <requirement type="package" version="3.3.6">r-ggplot2</requirement>
+        <requirement type="package" version="2.3">r-gridExtra</requirement>
+        <!--<requirement type="package" version="2.16">r-adiv</requirement>-->
+        <requirement type="package" version="1.0.9">r-Rcpp</requirement>
+        <requirement type="package" version="3.6.3">r-arsenal</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript
+            '$__tool_directory__/cb_qecb.r'
+            '$__tool_directory__/cb_ecology.r
+            '$input_data'
+            '$input_data2'
+            '$fiche_val'
+            '$fiche_term'
+            '$output_qecb'
+            '$plots'
+        ]]>
+    </command>
+    <inputs>
+        <param name="input_data" type="data" format="tabular" label="Input data valid"/>
+        <param name="input_data2" type="data" format="tabular" label="Input data finish"/>
+        <param name="fiche_val" type="data" format="tabular" label="Input data field valid"/>
+        <param name="fiche_term" type="data" format="tabular" label="Input data field finish"/>
+    </inputs>
+    <outputs>
+        <data name="output_qecb" from_work_dir="Valeurs_stat.tabular" format="txt" label="QECB"/>
+        <collection type="list" name="plots" label="QECB plot">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+    </outputs>
+    <tests>
+        <test>
+            <param name="input_data" value=""/>
+            <param name="input_data2" value=""/>
+            <param name="fiche_val" value=""/>
+            <param name="fiche_term" value=""/>
+            <output name="output_qecb">
+                <assert_contents>
+                    <has_n_columns n="3"/>
+                </assert_contents>
+            </output>
+            <output_collection name="plots" type="list" count="3"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+========================================================================
+
+========================================================================
+
+
+**What it does**
+
+
+
+**Input description**
+
+
+
++--------------+----------+
+|      BIL     | ENVI HDR |
++==============+==========+
+| raster stack | Metadata |
++--------------+----------+
+|      ...     |    ...   |
++--------------+----------+
+
+**Output**
+
+
+
+    ]]>    </help>
+
+</tool>
