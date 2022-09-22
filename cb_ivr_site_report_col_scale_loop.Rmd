@@ -12,22 +12,21 @@ output:
   
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo=F
-  , message=F
-  , warning=F
+  echo = FALSE
+  , message = FALSE
+  , warning = FALSE
   )
 
 library(tidyverse)
-#library(dplyr)
 library(knitr)
 library(officer)
 library(officedown)
 
-df = ivr_test
-df.full = ivr_test_full
-  
-df1 = df %>% filter(Site==v)
-df1 = droplevels(df1)
+df <- ivr_test
+df_full <- ivr_test_full
+
+df1 <- df %>% filter(Site == v)
+df1 <- droplevels(df1)
 ```
 
 # Contexte
@@ -68,26 +67,26 @@ Cependant, passer d'une variable continue allant de 0% à 100% à une variable d
 
 ```{r}
 
-ivr.scale <- data.frame(matrix(NA, nrow = 6, ncol = 3))
-colnames(ivr.scale) <- c("Occurrence des blocs blancs/verts", "Valeur d'IVR",  "Signification")
+ivr_scale <- data.frame(matrix(NA, nrow = 6, ncol = 3))
+colnames(ivr_scale) <- c("Occurrence des blocs blancs/verts", "Valeur d'IVR",  "Signification")
 
-ivr.scale$`Occurrence des blocs blancs/verts` <- c(
-  "entre 0% et <5%", 
-  "entre 5% et <25%", 
-  "entre 25% et <45%", 
-  "entre 45% et <65%", 
+ivr_scale$`Occurrence des blocs blancs/verts` <- c(
+  "entre 0% et <5%",
+  "entre 5% et <25%",
+  "entre 25% et <45%",
+  "entre 45% et <65%",
   "entre 65% et <85%",
   "entre 85% et 100%")
-ivr.scale$`Valeur d'IVR` <- c(
-  "0 = IVR < 0.25", 
-  "0.25 = IVR < 1.25", 
-  "1.25 = IVR < 2.25", 
-  "2.25 = IVR < 3.25", 
+ivr_scale$`Valeur d'IVR` <- c(
+  "0 = IVR < 0.25",
+  "0.25 = IVR < 1.25",
+  "1.25 = IVR < 2.25",
+  "2.25 = IVR < 3.25",
   "3.25 = IVR < 4.25",
   "4.25 = IVR = 5")
-ivr.scale$Signification <- c("Pas de bloc ou de rares blocs retournés", "Faible représentation des blocs blancs/verts", "Bonne proportion de blocs blancs/verts", "Représentation équivalente de blocs bruns/rouges et blancs/verts", "Dominance des blocs blancs/verts", "Très forte dominance des blocs blancs/verts")
+ivr_scale$Signification <- c("Pas de bloc ou de rares blocs retournés", "Faible représentation des blocs blancs/verts", "Bonne proportion de blocs blancs/verts", "Représentation équivalente de blocs bruns/rouges et blancs/verts", "Dominance des blocs blancs/verts", "Très forte dominance des blocs blancs/verts")
 
-#ivr.scale
+#ivr_scale
 
 ```
 
@@ -96,17 +95,17 @@ ivr.scale$Signification <- c("Pas de bloc ou de rares blocs retournés", "Faible
 library(dplyr)
 library(flextable)
 
-ivr.scale %>%
-  flextable() -> qu.tbl
-qu.tbl <- bg(qu.tbl, i = 1, bg = "blue")
-qu.tbl <- bg(qu.tbl, i = 2, bg = "olivedrab")
-qu.tbl <- bg(qu.tbl, i = 3, bg = "yellow")
-qu.tbl <- bg(qu.tbl, i = 4, bg = "gold1")
-qu.tbl <- bg(qu.tbl, i = 5, bg = "orange1")
-qu.tbl <- bg(qu.tbl, i = 6, bg = "red")
+ivr_scale %>%
+  qu_tbl <- flextable()
+qu_tbl <- bg(qu_tbl, i = 1, bg = "blue")
+qu_tbl <- bg(qu_tbl, i = 2, bg = "olivedrab")
+qu_tbl <- bg(qu_tbl, i = 3, bg = "yellow")
+qu_tbl <- bg(qu_tbl, i = 4, bg = "gold1")
+qu_tbl <- bg(qu_tbl, i = 5, bg = "orange1")
+qu_tbl <- bg(qu_tbl, i = 6, bg = "red")
 
-qu.tbl %>% autofit() %>% fit_to_width(7)
-  
+qu_tbl %>% autofit() %>% fit_to_width(7)
+
 ```
 
 Légende de la table. Pourcentages de blocs « blancs/verts », exprimés en une échelle continue de valeurs équivalentes d'IVR allant de 0 à 5.
@@ -120,16 +119,16 @@ Selon l'échelle discrète de valeurs de l'IVR, les valeurs médianes au site `r
 
 ```{r}
 
-par(mar=c(5, 5, 4, 2) + 0.1)
+par(mar = c(5, 5, 4, 2) + 0.1)
 
-  xmin. <- as.Date(ifelse(min(df1$Annee) >= 2014, "2014-01-01", paste0(min(df$Annee), "-01-01")), origin = "1970-01-01")
-  xmax. <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
+  xmin_ <- as.Date(ifelse(min(df1$Annee) >= 2014, "2014-01-01", paste0(min(df$Annee), "-01-01")), origin = "1970-01-01")
+  xmax_ <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1,
                           "2022-01-01")
                    #)
                    , origin = "1970-01-01")
 
-  plot(df$Date, df$ivr.med, xlim = c(xmin., xmax.), ylim = c(-0.2,5.2), pch = 19, cex = 1, main = unique(df1$Site.bis), xlab = "Année", ylab = "IVR", col = "grey")
-  
+  plot(df$Date, df$ivr.med, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, cex = 1, main = unique(df1$Site.bis), xlab = "Année", ylab = "IVR", col = "grey")
+
   points(df1$Date, df1$ivr.med, pch = 19, cex = 1.5)
   arrows(df1$Date, df1$ivr.med, df1$Date, df1$ivr.max, code = 3, angle = 90, length = 0.00)
   arrows(df1$Date, df1$ivr.med, df1$Date, df1$ivr.min, code = 3, angle = 90, length = 0.00)
@@ -138,31 +137,28 @@ par(mar=c(5, 5, 4, 2) + 0.1)
 
 ```{r}
 
-par(mar=c(5, 5, 4, 2) + 0.1)
+par(mar = c(5, 5, 4, 2) + 0.1)
 
-  xmin. <- as.Date(ifelse(min(df1$Annee) >= 2014, "2014-01-01", paste0(min(df$Annee), "-01-01")), origin = "1970-01-01")
-  xmax. <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
+  xmin_ <- as.Date(ifelse(min(df1$Annee) >= 2014, "2014-01-01", paste0(min(df$Annee), "-01-01")), origin = "1970-01-01")
+  xmax_ <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1,
                           "2022-01-01")
                    #)
                    , origin = "1970-01-01")
 
-  plot(df$Date, df$fr.r.med/20, xlim = c(xmin., xmax.), ylim = c(-0.2,5.2), pch = 19, main = unique(df1$Site.bis), xlab = "", ylab = "", type = 'n', axes = F)
+  plot(df$Date, df$fr.r.med / 20, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, main = unique(df1$Site.bis), xlab = "", ylab = "", type = "n", axes = FALSE)
 
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 85/20, as.Date("2023-01-01", origin = "1970-01-01"), 6, col = "red", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 65/20, as.Date("2023-01-01", origin = "1970-01-01"), 85/20, col = "orange1", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 45/20, as.Date("2023-01-01", origin = "1970-01-01"), 65/20, col = "gold1", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 25/20, as.Date("2023-01-01", origin = "1970-01-01"), 45/20, col = "yellow", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 5/20, as.Date("2023-01-01", origin = "1970-01-01"), 25/20, col = "olivedrab", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), -1, as.Date("2023-01-01", origin = "1970-01-01"), 5/20, col = "blue", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 85 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 6, col = "red", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 65 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 85 / 20, col = "orange1", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 45 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 65 / 20, col = "gold1", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 25 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 45 / 20, col = "yellow", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 5 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 25 / 20, col = "olivedrab", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), -1, as.Date("2023-01-01", origin = "1970-01-01"), 5 / 20, col = "blue", border = NA)
 
-  par(new = T)
-  plot(df$Date, df$fr.r.med/20, xlim = c(xmin., xmax.), ylim = c(-0.2,5.2), pch = 19, main = unique(df1$Site.bis), xlab = "Année", ylab = 
-         #"blocs retournés (%/20, moy. et ET)",
-          "IVR", col = "grey")
-  points(df1$Date, df1$fr.r.med/20, pch = 19, cex = 1.5)
-  arrows(df1$Date, df1$fr.r.med/20, df1$Date, df1$fr.r.max/20, code = 3, angle = 90, length = 0.00)
-  arrows(df1$Date, df1$fr.r.med/20, df1$Date, df1$fr.r.min/20, code = 3, angle = 90, length = 0.00)
-  
+  par(new = TRUE)
+  plot(df$Date, df$fr.r.med / 20, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, main = unique(df1$Site.bis), xlab = "Année", ylab = "IVR", col = "grey")
+  points(df1$Date, df1$fr.r.med / 20, pch = 19, cex = 1.5)
+  arrows(df1$Date, df1$fr.r.med / 20, df1$Date, df1$fr.r.max / 20, code = 3, angle = 90, length = 0.00)
+  arrows(df1$Date, df1$fr.r.med / 20, df1$Date, df1$fr.r.min / 20, code = 3, angle = 90, length = 0.00)
 ```
 
 Légende des figures. Evolution temporelle de la valeur mediane de l'IVR au site `r unique(df1$Site.bis)` (points noirs), en comparaison à celles des vingt-trois autres champs de blocs suivis le long de la façade Manche-Atlantique française (points gris). Les barres représentent la distribution des valeurs individuelles d'IVR par quadrat au site `r unique(df1$Site.bis)` (n = `r sort(unique(df1$nb.))`) entre valeurs minimums et maximums. Graphique du haut - La distribution en escalier des valeurs médianes de l'IVR reflète le caractère discret de l'échelle utilisée. Graphique du bas - Le découpage horizontal de la fenêtre graphique représente les 5 classes d'occurrence de retournement des blocs mobiles, de quasi-inexistant en bleu à dominant en rouge, ramenée sur une échelle continue de 0 à 5.

@@ -53,7 +53,7 @@ pairs2 <- function (var, scaleR=TRUE, Rmethod="pearson", reorder = FALSE,  gap=0
 
 
 #qecb.val. <- readRDS("results/QECB/qecb.val.RDS")
-qecb <- readRDS("results/QECB/qecbNew.RDS")
+qecb <- readRDS("qecbNew.RDS")
 
 names(qecb)
 

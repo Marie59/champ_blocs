@@ -19,11 +19,11 @@
         <!--<requirement type="package" version="2.16">r-adiv</requirement>-->
         <requirement type="package" version="1.0.9">r-Rcpp</requirement>
         <requirement type="package" version="3.6.3">r-arsenal</requirement>
+        <requirement type="package" version="2.0.3">r-magrittr</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
         Rscript
             '$__tool_directory__/cb_qecb.r'
-            '$__tool_directory__/cb_ecology.r
             '$input_data'
             '$input_data2'
             '$fiche_val'
@@ -33,10 +33,10 @@
         ]]>
     </command>
     <inputs>
-        <param name="input_data" type="data" format="tabular" label="Input data valid"/>
-        <param name="input_data2" type="data" format="tabular" label="Input data finish"/>
-        <param name="fiche_val" type="data" format="tabular" label="Input data field valid"/>
-        <param name="fiche_term" type="data" format="tabular" label="Input data field finish"/>
+        <param name="input_data" type="data" format="data" label="Input data valid"/>
+        <param name="input_data2" type="data" format="data" label="Input data finish"/>
+        <param name="fiche_val" type="data" format="data" label="Input data field valid"/>
+        <param name="fiche_term" type="data" format="data" label="Input data field finish"/>
     </inputs>
     <outputs>
         <data name="output_qecb" from_work_dir="Valeurs_stat.tabular" format="txt" label="QECB"/>

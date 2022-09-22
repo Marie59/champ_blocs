@@ -21,7 +21,7 @@
 #               rmarkdown
 #               
 #               
-
+library(magrittr)
 #####Load arguments
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -31,29 +31,35 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) {
     stop("This tool needs at least 1 argument")
 }else {
-    source(args[1])
-    input_data <- args[2]
-    input_data2 <- args[3]
-    fiche_val <- args[4]
-    fiche_term <- args[5]
+    input_data <- args[1]
+    input_data2 <- args[2]
+    fiche_val <- args[3]
+    fiche_term <- args[4]
 
 }
 
 
 # load qecb data
 
-qecb <- read.csv2(input_data, header = FALSE, fileEncoding = "Latin1") 
+qecb <- read.csv2(input_data, header = FALSE, fileEncoding = "Latin1")
+names_ <- as.vector(unlist(qecb[1, ]))
+names_ <- gsub(" ", ".", names_)
+colnames(qecb) <- names_
 
-qecb.next <- read.csv2(input_data2, header = FALSE, fileEncoding = "Latin1")
-
+qecb_next <- read.csv2(input_data2, header = FALSE, fileEncoding = "Latin1")
+names_ <- as.vector(unlist(qecb_next[1, ]))
+names_ <- gsub(" ", ".", names_)
+colnames(qecb_next) <- names_
+rm(names_)
 
 # bind qecb dfs.
 
-names(qecb) ; names(qecb.next)
-setdiff(names(qecb), names(qecb.next))
-qecb <- dplyr::bind_rows(qecb, qecb.next)
+qecb <- dplyr::bind_rows(qecb, qecb_next)
 
-#rm(qecb.next)
+# NB inversion between id and ID.Fiche variable names
+qecb <- dplyr::rename(qecb, XX = ID.Fiche)
+qecb <- dplyr::rename(qecb, ID.Fiche = id)
+qecb <- dplyr::rename(qecb, id = XX)
 
 # import csv files ficheterrain
 
@@ -62,50 +68,36 @@ fiche <- read.csv2(fiche_val, fileEncoding = "Latin1")
 fiche_next <- read.csv2(fiche_term, fileEncoding = "Latin1")
 
 # bind ficheterrain
-
-names(fiche) ; names(fiche_next)
-setdiff(names(fiche), names(fiche_next))
 fiche <- dplyr::bind_rows(fiche, fiche_next)
 
 ## work on "Fiche terrain"
-
 date_fiche <- as.Date(stringr::str_sub(fiche$date.sortie, end = 10), origin = "1970-01-01")
 fiche <- tibble::add_column(fiche, date_fiche, .after = "date.sortie")
 rm(date_fiche)
 
-
 ## qecb vs fiche terrain
 
-sort(unique(qecb[, c("id")]))
-sort(unique(fiche[, c("ID.Fiche")]))
-fiche_red <- dplyr::filter(fiche, ID.Fiche %in% unique(qecb[, c("id")]))
+qecb$id <- as.numeric(qecb[, c("id")])
+stop(qecb)
+fiche_red <- dplyr::filter(fiche, fiche$ID.Fiche %in% unique(qecb[, c("id")]))
 
-qecb %>% dplyr::group_by(id) %>% dplyr::count() -> id_count
+id_count <- qecb %>% dplyr::group_by(id) %>% dplyr::count() 
 id_count <- dplyr::rename(id_count, "ID.Fiche" ="id")
-id_count <- data.frame(id_count)
+id_count <- dplyr::ungroup(id_count)
+id_count <- as.data.frame(id_count)
+
 fiche_red <- dplyr::left_join(fiche_red, id_count)
 
 # rep fiche terrain information
 fiche_expanded <- fiche_red[rep(row.names(fiche_red), fiche_red$n), 1:ncol(fiche_red)]
-
 fiche_expanded <- dplyr::rename(fiche_expanded, "id" = "ID.Fiche")
-names(fiche_expanded)
-unique(fiche_expanded$type.de.suivi)
-#colnames(fiche_expanded) <- c(names(fiche_expanded["id"]), c(paste0(names(fiche_expanded[2:ncol(fiche_expanded)]), "_", "fiche")))
-#qecb <- bind_cols(qecb, fiche_expanded[, c("id", "libellé.sortie", "date_fiche", "code.site", "site", "zone.habitat")])
-qecb <- dplyr::bind_cols(qecb, fiche_expanded) # finally keep all the fiche terrain info in the final qecb df.
-#qecb <- qecb[, c(1:7,73:76,8:72)]
-#unique(qecb$id...1-qecb$id...70) # when previous script
-table(qecb$id...1-qecb$id...68)
-qecb <- dplyr::rename(qecb, "id_qecb" = "id...1")
-#qecb <- dplyr::rename(qecb, "id_fiche" = "id...70") # when previous script
-qecb <- dplyr::rename(qecb, "id_fiche" = "id...68")
-names(qecb)
 
-unique(qecb[, c("id_qecb", "id_fiche")])
+qecb <- dplyr::bind_cols(qecb, fiche_expanded) # finally keep all the fiche terrain info in the final qecb df.
+qecb <- dplyr::rename(qecb, "id_qecb" = "id...1")
+qecb <- dplyr::rename(qecb, "id_fiche" = "id...68")
 
 rm(fiche_expanded, fiche_red, id_count)
-rm(fiche_next, qecb.next)
+rm(fiche_next, qecb_next)
 
 saveRDS(fiche, "fiche.qecb.RDS")
 
@@ -117,7 +109,6 @@ qecb %>% separate(date_fiche, c("Year", "Month", "Day"), sep = "-", remove = FAL
 
 ## Quadrat nb
 
-library(stringr)
 Quadrat <- stringr::str_extract(qecb$Numero.Photo, "Q[12345]")
 qecb <- tibble::add_column(qecb, Quadrat, .after = "Numero.Photo")
 rm(Quadrat)
@@ -1703,8 +1694,8 @@ options(scipen = 0, digits = 7) # default
 
 # save the final qecbNew df.
 
-saveRDS(qecbNew, "results/QECB/qecbNew.RDS")
-qecbNew <- readRDS("results/QECB/qecbNew.RDS")
+saveRDS(qecbNew, "qecbNew.RDS")
+#qecbNew <- readRDS("results/QECB/qecbNew.RDS")
 
 
 # do calculate QECB values now
@@ -1740,8 +1731,8 @@ dplyr::filter(qecbNew, Site.Year.Month.Day != "FINS_Quemenes.2020.10.16") -> qec
 #qecbNew$Type.Bloc <- as.factor(qecbNew$Type.Bloc)
 #qecbNew %>% dplyr::filter(!(ID.Fiche == "2018-09-10-GDMO-CDB-001" & Numero.Photo == "")) -> qecbNew
 
-saveRDS(qecbNew, "results/QECB/qecbNew.RDS")
-qecbNew <- readRDS("results/QECB/qecbNew.RDS")
+saveRDS(qecbNew, "qecbNew.RDS")
+#qecbNew <- readRDS("results/QECB/qecbNew.RDS")
 
 
 for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
@@ -2347,15 +2338,14 @@ qecb.val. <- tibble::add_column(qecb.val., Survey.nb, .after = "Site.Year.Month.
 
 rm(Survey.nb)  
 
-saveRDS(qecb.val., "results/QECB/qecb.val.RDS")
-saveRDS(qecb.val.qu., "results/QECB/qecb.val.qu.RDS")
+saveRDS(qecb.val., "qecb.val.RDS")
+saveRDS(qecb.val.qu., "qecb.val.qu.RDS")
 
 
 ## Plots
 
-
-qecb.val. <- readRDS("results/QECB/qecb.val.RDS")
-qecb.val.qu. <- readRDS("results/QECB/qecb.val.qu.RDS")
+#qecb.val. <- readRDS("results/QECB/qecb.val.RDS")
+#qecb.val.qu. <- readRDS("results/QECB/qecb.val.qu.RDS")
 
 
 ## diagnostic plots
@@ -2764,7 +2754,7 @@ rm(df., i, qecb.val.eg, x., xlim.)
 
 # plot qecb stats
 
-qecb.val.qu.stat. <- readRDS("results/qecb/qecb.val.qu.stat.RDS")
+#qecb.val.qu.stat. <- readRDS("results/qecb/qecb.val.qu.stat.RDS")
 
 `%notin%` <- Negate(`%in%`)
 #qecb.val.qu.stat. <- dplyr::filter(qecb.val.qu.stat., Site %notin% c("FINS_Quemenes", "FINS_SeinGoulenez"))
