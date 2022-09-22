@@ -8,7 +8,17 @@
 ##  ##
 ###############################
 
-#####Packages : 
+#####Packages : dplyr
+#               tidyr
+#               readr
+#               writexl
+#               stringr
+#               readxl
+#               tibble
+#               lubridate
+#               cowplot
+#               magrittr
+#               rmarkdown
 #               
 #               
 
@@ -32,143 +42,89 @@ if (length(args) < 1) {
 
 # load qecb data
 
-qecb <- read.csv2(input_data)
-class(qecb)
-head(qecb)
+qecb <- read.csv2(input_data, header = FALSE, fileEncoding = "Latin1") 
 
-qecb.next <- read.csv2(input_data2)
-class(qecb.next)
-head(qecb.next)
+qecb.next <- read.csv2(input_data2, header = FALSE, fileEncoding = "Latin1")
+
 
 # bind qecb dfs.
 
 names(qecb) ; names(qecb.next)
 setdiff(names(qecb), names(qecb.next))
-qecb <- bind_rows(qecb, qecb.next)
+qecb <- dplyr::bind_rows(qecb, qecb.next)
 
 #rm(qecb.next)
 
 # import csv files ficheterrain
 
-fiche <- read.csv2(fiche_val)
+fiche <- read.csv2(fiche_val, fileEncoding = "Latin1")
 
-fiche_next <- read.csv2(fiche_term)
+fiche_next <- read.csv2(fiche_term, fileEncoding = "Latin1")
 
 # bind ficheterrain
 
 names(fiche) ; names(fiche_next)
 setdiff(names(fiche), names(fiche_next))
-fiche <- bind_rows(fiche, fiche_next)
-
-#rm(fiche_next)
-
-
-# same comment as previous, do not run this code again, we'll know work with qecb merged and fiche merged df and we'll get the Site name and the Date from the fiche df.
-#################################################
-
-## import suppl. observations ESTAMP 2018+
-
-qecb.next <- read.csv2("raw_data/ESTAMP_CB/données CdB terminées/champbloc_qecb.csv")
-class(qecb.next)
-head(qecb.next)
-
-unique(qecb.next$ID.Fiche)
-unique(qecb.next$id)
-unique(str_sub(qecb.next$ID.Fiche,12)) ; unique(qecb.next$id)
-# info on site ID.Fiche in "Fiche terrain" suppl. excel file
-
-unique(fiche_next[, c("ID.Fiche", "code.site", "site", "sous.site", "zone.habitat")])
-intersect(unique(fiche_next$ID.Fiche), unique(qecb.next$id))
-filter(fiche_next, ID.Fiche %in% c(intersect(unique(fiche_next$ID.Fiche), unique(qecb.next$id))))[, c("ID.Fiche", "code.site", "site", "sous.site", "zone.habitat")]
-Site <- rep("GDMO_Locmariaquer", nrow(qecb.next)) # previous script
-qecb.next <- add_column(qecb.next, Site, .after = "ID.Fiche") # previous script
-rm(Site)
-
-unique(str_sub(qecb.next$ID.Fiche,1,10))
-DateYmd <- as.Date(str_sub(qecb.next$ID.Fiche,1,10), format = "%Y-%m-%d", origin = "1970-01-01")
-qecb.next <- add_column(qecb.next, DateYmd, .after = "Site")
-rm(DateYmd)
-#qecb.next %>% separate(DateYmd, c("Year", "Month", "Day"), sep = "-", remove = F) -> qecb.next
-
-
-## bind qecb ESTAMP dfs.
-
-names(qecb) ; names(qecb.next)
-setdiff(names(qecb), names(qecb.next))
-
-qecb <- bind_rows(qecb, qecb.next)
-
-#qecb <- setdiff(qecb, qecb.next)
-
-rm(qecb.next)
-
-#################################################
+fiche <- dplyr::bind_rows(fiche, fiche_next)
 
 ## work on "Fiche terrain"
 
-library(stringr)
-Date.fiche <- as.Date(str_sub(fiche$date.sortie, end = 10), origin = "1970-01-01")
-library(tibble)
-fiche <- add_column(fiche, Date.fiche, .after = "date.sortie")
-rm(Date.fiche)
+date_fiche <- as.Date(stringr::str_sub(fiche$date.sortie, end = 10), origin = "1970-01-01")
+fiche <- tibble::add_column(fiche, date_fiche, .after = "date.sortie")
+rm(date_fiche)
 
 
 ## qecb vs fiche terrain
 
 sort(unique(qecb[, c("id")]))
 sort(unique(fiche[, c("ID.Fiche")]))
-fiche.red <- filter(fiche, ID.Fiche %in% unique(qecb[, c("id")]))
+fiche_red <- dplyr::filter(fiche, ID.Fiche %in% unique(qecb[, c("id")]))
 
-qecb %>% group_by(id) %>% count() -> id.count
-id.count <- rename(id.count, "ID.Fiche" ="id")
-id.count <- data.frame(id.count)
-fiche.red <- left_join(fiche.red, id.count)
+qecb %>% dplyr::group_by(id) %>% dplyr::count() -> id_count
+id_count <- dplyr::rename(id_count, "ID.Fiche" ="id")
+id_count <- data.frame(id_count)
+fiche_red <- dplyr::left_join(fiche_red, id_count)
 
 # rep fiche terrain information
-fiche.expanded <- fiche.red[rep(row.names(fiche.red), fiche.red$n), 1:ncol(fiche.red)]
+fiche_expanded <- fiche_red[rep(row.names(fiche_red), fiche_red$n), 1:ncol(fiche_red)]
 
-fiche.expanded <- rename(fiche.expanded, "id" = "ID.Fiche")
-names(fiche.expanded)
-unique(fiche.expanded$type.de.suivi)
-#colnames(fiche.expanded) <- c(names(fiche.expanded["id"]), c(paste0(names(fiche.expanded[2:ncol(fiche.expanded)]), "_", "fiche")))
-#qecb <- bind_cols(qecb, fiche.expanded[, c("id", "libellé.sortie", "Date.fiche", "code.site", "site", "zone.habitat")])
-qecb <- bind_cols(qecb, fiche.expanded) # finally keep all the fiche terrain info in the final qecb df.
+fiche_expanded <- dplyr::rename(fiche_expanded, "id" = "ID.Fiche")
+names(fiche_expanded)
+unique(fiche_expanded$type.de.suivi)
+#colnames(fiche_expanded) <- c(names(fiche_expanded["id"]), c(paste0(names(fiche_expanded[2:ncol(fiche_expanded)]), "_", "fiche")))
+#qecb <- bind_cols(qecb, fiche_expanded[, c("id", "libellé.sortie", "date_fiche", "code.site", "site", "zone.habitat")])
+qecb <- dplyr::bind_cols(qecb, fiche_expanded) # finally keep all the fiche terrain info in the final qecb df.
 #qecb <- qecb[, c(1:7,73:76,8:72)]
 #unique(qecb$id...1-qecb$id...70) # when previous script
 table(qecb$id...1-qecb$id...68)
-qecb <- rename(qecb, "id_qecb" = "id...1")
-#qecb <- rename(qecb, "id_fiche" = "id...70") # when previous script
-qecb <- rename(qecb, "id_fiche" = "id...68")
+qecb <- dplyr::rename(qecb, "id_qecb" = "id...1")
+#qecb <- dplyr::rename(qecb, "id_fiche" = "id...70") # when previous script
+qecb <- dplyr::rename(qecb, "id_fiche" = "id...68")
 names(qecb)
 
 unique(qecb[, c("id_qecb", "id_fiche")])
 
-rm(fiche.expanded, fiche.red, id.count)
+rm(fiche_expanded, fiche_red, id_count)
 rm(fiche_next, qecb.next)
 
-saveRDS(fiche, "results/QECB/fiche.qecb.RDS")
+saveRDS(fiche, "fiche.qecb.RDS")
 
 # from previous script, when I had to compare 'home made' date with fiche date
-#as.Date(setdiff(unique(qecb$DateYmd), unique(qecb$Date.fiche)), origin = "1970-01-01")
-#unique(qecb$DateYmd)
-#unique(qecb$Date.fiche)
-#`%notin%` <- Negate(`%in%`)
-#unique(filter(qecb, DateYmd %notin% unique(qecb$Date.fiche))[, c("DateYmd", "Date.fiche", "ID.Fiche")])
-# ok, we can use Date.fiche instead of previous DateYmd in the rest of the script; we can easily explain the difference, see "ID.Fiche" details below in Console.
+# ok, we can use date_fiche instead of previous DateYmd in the rest of the script; we can easily explain the difference, see "ID.Fiche" details below in Console.
 
-qecb %>% separate(Date.fiche, c("Year", "Month", "Day"), sep = "-", remove = F) -> qecb
+qecb %>% separate(date_fiche, c("Year", "Month", "Day"), sep = "-", remove = FALSE) -> qecb
 
 
 ## Quadrat nb
 
 library(stringr)
-Quadrat <- str_extract(qecb$Numero.Photo, "Q[12345]")
-qecb <- add_column(qecb, Quadrat, .after = "Numero.Photo")
+Quadrat <- stringr::str_extract(qecb$Numero.Photo, "Q[12345]")
+qecb <- tibble::add_column(qecb, Quadrat, .after = "Numero.Photo")
 rm(Quadrat)
 
 # check
 Quadrat.bis <- rep(NA, length = nrow(qecb))
-qecb <- add_column(qecb, Quadrat.bis, .after = "Quadrat")
+qecb <- tibble::add_column(qecb, Quadrat.bis, .after = "Quadrat")
 rm(Quadrat.bis)
 
 qecb$Quadrat.bis <- ifelse(qecb$Numéro.Bloc.échantillon %in% c(1,2) & qecb$Type.Bloc == "Bloc mobile", "Q1", qecb$Quadrat.bis)
@@ -189,41 +145,9 @@ test.$check <- ifelse(test.$Quadrat == test.$Quadrat.bis, "Y", "N")
 table(test.$check)
 rm(test.)
 
-
-# We do not work on Maud thesis data, so don't run below code (that was only partial actually)
-#################################################
-
-## import Maud date
-
-#library(readxl)
-#qecb.Maud1013 <- read_excel("raw_data/20210507_Maud.thesis_CB/BDCB_Ile aux Moines_2010-2013.xls", sheet = "t_final")
-sort(as.Date(qecb.Maud1013$Date))[1] # wrong year, chould be 2011 and not 2001
-sort(as.Date(qecb.Maud1013$Date, origin = "1970-01-01"))[length(qecb.Maud1013$Date)]
-#qecb.Maud0910 <- read_excel("raw_data/20210507_Maud.thesis_CB/BDCB-2009-2010m_20Bbruns-20Bverts_publi_V3.xls", sheet = "t_final")
-sort(as.Date(as.numeric(qecb.Maud0910$Date), origin = "1900-01-01"))[1]
-sort(as.Date(as.numeric(qecb.Maud0910$Date), origin = "1900-01-01"))[length(sort(as.Date(as.numeric(qecb.Maud0910$Date), origin = "1900-01-01")))]
-
-#qecb.Maud[, c("Site",
-#  "Date",
-#  "% algues brunes (Fucales)",
-#  "% algues rouges",
-#  "% algues vertes (Ulves + Entéromorphes)",
-#  "% Cladophora sp. (strate 2)"
-#)]
-
-
-## bind the dfs.
-
-# ... add other dfs later on
-
-#rm(qecb.Maud0910, qecb.Maud1013)
-
-#################################################
-
-
 # Site name as initially encoded in the previous home made Site name and Date search. 
 unique(qecb$zone.habitat)
-qecb <- add_column(qecb, Site = NA, .after = "ID.Fiche")
+qecb <- tibble::add_column(qecb, Site = NA, .after = "ID.Fiche")
 unique(qecb$Site)
 
 qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[1], "GDMO_Locmariaquer", qecb$Site)
@@ -250,7 +174,7 @@ qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[21], "FINS_Mo
 qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[22], "FINS_StNicolasGlenan", qecb$Site)
 
 unique(qecb$Site)
-check. <- filter(qecb, is.na(qecb$Site))
+check. <- dplyr::filter(qecb, is.na(qecb$Site))
 # Anne Boulet forgot to specify zone.habitat in 2020. I asked her to correct it in ESTAMP
 qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[23], "GDMO_Locmariaquer", qecb$Site)
 unique(qecb$Site)
@@ -259,46 +183,44 @@ rm(check.)
 
 # Name for report/plot
 
-qecb <- add_column(qecb, Site.bis = NA, .after = "Site")
+qecb <- tibble::add_column(qecb, Site_bis = NA, .after = "Site")
 unique(qecb$Site)
-filter(qecb, is.na(qecb$Site))
+dplyr::filter(qecb, is.na(qecb$Site))
 check. <- data.frame(Site = qecb[, "Site"])
-check. <- arrange(check., Site)
+check. <- dplyr::arrange(check., Site)
 rm(check.)
-check. <- arrange(qecb, Site)
+check. <- dplyr::arrange(qecb, Site)
 rm(check.)
 
-qecb$Site.bis <- ifelse(qecb$Site == "GDMO_Locmariaquer", "Locmariaquer", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "GDMO_BegLann", "Beg Lann", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "FOUR_PlateauFour", "Plateau du Four", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "EGMP_GroinCou", "Groin du Cou", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "EGMP_PasEmsembert", "Le Pas d'Emsembert", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "EGMP_BreeBains", "La Brée-les-Bains", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "EGMP_PerreAntiochat", "Le Perré d'Antiochat", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "EGMP_Chassiron", "Chassiron", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "BASQ_FlotsBleusZP", "Les Flots Bleus / zone pêcheurs", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "BASQ_FlotsBleusZF", "Les Flots Bleus / zone familles", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "GONB_IlotStMichel", "Îlot Saint-Michel", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "FINS_Quemenes", "Quéménès", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "FINS_SeinGoulenez", "Île de Sein - Goulenez", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "FINS_SeinKilaourou", "Île de Sein - Kilaourou", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "ARMO_Verdelet", "Îlot du Verdelet", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "ARMO_Piegu", "Piégu", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "ARMO_Bilfot", "Pointe de Bilfot", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "ARMO_IlePlate", "Île Plate", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "PDMO_Perharidy", "Perharidy", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "BRES_Keraliou", "Keraliou", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "FINS_Mousterlin", "Pointe de Mousterlin", qecb$Site.bis)
-qecb$Site.bis <- ifelse(qecb$Site == "FINS_StNicolasGlenan", "Saint-Nicolas des Glénan", qecb$Site.bis)
+qecb$Site_bis <- ifelse(qecb$Site == "GDMO_Locmariaquer", "Locmariaquer", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "GDMO_BegLann", "Beg Lann", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "FOUR_PlateauFour", "Plateau du Four", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "EGMP_GroinCou", "Groin du Cou", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "EGMP_PasEmsembert", "Le Pas d'Emsembert", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "EGMP_BreeBains", "La Brée-les-Bains", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "EGMP_PerreAntiochat", "Le Perré d'Antiochat", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "EGMP_Chassiron", "Chassiron", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "BASQ_FlotsBleusZP", "Les Flots Bleus / zone pêcheurs", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "BASQ_FlotsBleusZF", "Les Flots Bleus / zone familles", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "GONB_IlotStMichel", "Îlot Saint-Michel", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "FINS_Quemenes", "Quéménès", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "FINS_SeinGoulenez", "Île de Sein - Goulenez", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "FINS_SeinKilaourou", "Île de Sein - Kilaourou", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "ARMO_Verdelet", "Îlot du Verdelet", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "ARMO_Piegu", "Piégu", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "ARMO_Bilfot", "Pointe de Bilfot", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "ARMO_IlePlate", "Île Plate", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "PDMO_Perharidy", "Perharidy", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "BRES_Keraliou", "Keraliou", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "FINS_Mousterlin", "Pointe de Mousterlin", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "FINS_StNicolasGlenan", "Saint-Nicolas des Glénan", qecb$Site_bis)
 
-unique(qecb[, c("Site", "Site.bis")])
+unique(qecb[, c("Site", "Site_bis")])
 
 # change some variables to factor
 
 unique(qecb$Type.Bloc)
-#qecb$Type.Bloc <- factor(qecb$Type.Bloc, levels = c("Bloc mobile", "Bloc fixé", "Roche en place"))
 unique(qecb$Face)
-#qecb$Face <- factor(qecb$Face, levels = c("face supérieure", "face inférieure"))
 unique(qecb$Numéro.Bloc.échantillon)
 
 
@@ -313,9 +235,7 @@ rm(ix)
 names(qecb)
 qecb <- qecb[, c(72:107, 1:71)]
 
-saveRDS(qecb, "results/QECB/qecb.RDS")
-#csvwrite <- readr::write_csv
-#qecb %>% csvwrite("results/QECB/qecb.csv")
+saveRDS(qecb, "qecb.RDS")
 
 rm(qecb, fiche)
 
@@ -324,16 +244,10 @@ rm(qecb, fiche)
 
 ## QECB determination test
 
+#qecb <- readRDS("results/QECB/qecb.RDS")
 
-qecb <- readRDS("results/QECB/qecb.RDS")
-
-#filter(qecb, id_qecb == 392521) -> check
-#arrange(check, Type.Bloc, Face, Numéro.Bloc.échantillon) -> check
-#write.csv(check, "check.csv")
-
-library(dplyr)
 unique(qecb$Site)
-qecb  %>% filter(Site == "GONB_IlotStMichel" & Year == "2016" & Month == "05") -> df.test
+qecb  %>% dplyr::filter(qecb$Site == "GONB_IlotStMichel" && qecb$Year == "2016" & qecb$Month == "05") -> df.test
 
 unique(df.test$Type.Bloc)
 df.test$Type.Bloc <- factor(df.test$Type.Bloc, levels = c("Bloc mobile", "Bloc fixé", "Roche en place"))
@@ -341,7 +255,7 @@ unique(df.test$Face)
 df.test$Face <- factor(df.test$Face, levels = c("face supérieure", "face inférieure"))
 unique(df.test$Numéro.Bloc.échantillon)
 
-df.test <- arrange(df.test, Type.Bloc, Face, Numéro.Bloc.échantillon)
+df.test <- dplyr::arrange(df.test, Type.Bloc, Face, Numéro.Bloc.échantillon)
 
 
 # formule developed below; but then updated and modified in the for loop; do not run anymore
@@ -354,8 +268,8 @@ df.test <- arrange(df.test, Type.Bloc, Face, Numéro.Bloc.échantillon)
 
 # VFS.BM Bloc mobile
 
-df.test %>% filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+df.test %>% dplyr::filter(df.test$Type.Bloc == "Bloc mobile" && df.test$Face == "face supérieure") -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 
 (  (df.$X..algues.brunes + df.$X..algues.rouges)
  +  df.$X..Lithophyllum
@@ -377,8 +291,8 @@ VFS.BM
 
 # VFI.BM Bloc mobile         
 
-df.test %>% filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+df.test %>% dplyr::filter(df.test$Type.Bloc == "Bloc mobile" && df.test$Face == "face inférieure") -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 (  (df.$X..Eponges + df.$X..Ascidies.Coloniales + df.$X..Ascidies.Solitaires)
   +  df.$X..Lithophyllum 
 ) - 
@@ -400,7 +314,7 @@ VFI.BM
 
 # VFSI.BM Bloc mobile
 
-df.test %>% filter(Type.Bloc == "Bloc mobile") -> df.
+df.test %>% dplyr::filter(df.test$Type.Bloc == "Bloc mobile") -> df.
 num.bloc <- as.vector(sort(unique(df.$Numéro.Bloc.échantillon)))
 VFSI.BM <- NA
 
@@ -409,16 +323,16 @@ for (i in c(1:length(num.bloc))) {
 j. <- num.bloc[i]
 
 VFSIn. <- unname(unlist(
- ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
- + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
+ ( (dplyr::filter(df., df.$Numéro.Bloc.échantillon == j. && df.$Face == "face supérieure")["Nb.spirorbis.total"]
+ + dplyr::filter(df., df.$Numéro.Bloc.échantillon == j. && df.$Face == "face inférieure")["Nb.spirorbis.total"]
  ) / 1000 )
  -
  ( 
-  ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-   + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
+  ( (dplyr::filter(df., df.$Numéro.Bloc.échantillon == j. && df.$Face == "face supérieure")["X..Balanes.Vivantes"]
+   + dplyr::filter(df., df.$Numéro.Bloc.échantillon == j. && df.$Face == "face inférieure")["X..Balanes.Vivantes"]
   ) / 100 )
-  + ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
-      + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
+  + ( (dplyr::filter(df., df.$Numéro.Bloc.échantillon == j. && df.$Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
+      + dplyr::filter(df., df.$Numéro.Bloc.échantillon == j. && df.$Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
   ) / 100 )
  )
 )) 
@@ -448,8 +362,8 @@ QEBM.1
 
 # VrFS.BF moyenne Bloc fixé ; = VDRmoyenne in excel file
 
-df.test %>% filter(Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+df.test %>% dplyr::filter(df.test$Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 (  (df.$X..algues.brunes + df.$X..algues.rouges)
   +  df.$X..Lithophyllum
   + (df.$Nb.Littorina.obtusata + df.$Nb.Gibbula.cineraria + df.$Nb.Gibbula.pennanti + df.$Nb.Gibbula.umbilicalis)
@@ -476,8 +390,8 @@ VrFS.BF
 
 # (G-(H+I)S.BM) Bloc mobile face supérieure
 
-df.test %>% filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+df.test %>% dplyr::filter(df.test$Type.Bloc == "Bloc mobile" && df.test$Face == "face supérieure") -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 ( df.$Nb.spirorbis.total/1000
   - (df.$X..Balanes.Vivantes/100 + df.$Nb.Spirobranchus.lamarckii.total/100)
 ) -> `(G-(H+I))S.BM`
@@ -564,9 +478,9 @@ unique(qecb$Face)
 qecb$Face <- factor(qecb$Face, levels = c("face supérieure", "face inférieure"))
 unique(qecb$Numéro.Bloc.échantillon)
 
-qecb <- arrange(qecb, Type.Bloc, Face, Numéro.Bloc.échantillon)
+qecb <- dplyr::arrange(qecb, Type.Bloc, Face, Numéro.Bloc.échantillon)
 
-qecb <- add_column(qecb, Site.Year.Month.Day = paste0(qecb$Site, ".", qecb$Year, ".", qecb$Month, ".", qecb$Day), .after = "Site.bis")
+qecb <- tibble::add_column(qecb, Site.Year.Month.Day = paste0(qecb$Site, ".", qecb$Year, ".", qecb$Month, ".", qecb$Day), .after = "Site_bis")
 
 # save qecb as a new df. for analysis purpose => several changes to operate to run the code and functions
 
@@ -581,61 +495,61 @@ df.list.loop <- data.frame("Site.Year.Month.Day" = unique(qecbNew$Site.Year.Mont
      "loop nb" = c(1:length(unique(qecbNew$Site.Year.Month.Day))))
 
 
-# filter for df that makes problem, then eventually correct in the dataframe for wrong coding; brackets (xx) for nb because will change when qecb df. enlarged.
+# dplyr::filter for df that makes problem, then eventually correct in the dataframe for wrong coding; brackets (xx) for nb because will change when qecb df. enlarged.
 
 
 # list nb (28) - EGMP_BreeBains.2016.04.06
 qecbNew$Face <- as.character(qecbNew$Face)
-qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_La Bree_20160406_VImport.xlsx" & qecbNew$Référence.bloc == "avr16-LaBreeB9sup", "face supérieure", qecbNew$Face)
-qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_La Bree_20160406_VImport.xlsx" & qecbNew$Référence.bloc == "avr16-LaBreeB10sup", "face supérieure", qecbNew$Face)
+qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_La Bree_20160406_VImport.xlsx" && qecbNew$Référence.bloc == "avr16-LaBreeB9sup", "face supérieure", qecbNew$Face)
+qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_La Bree_20160406_VImport.xlsx" && qecbNew$Référence.bloc == "avr16-LaBreeB10sup", "face supérieure", qecbNew$Face)
 qecbNew$Face <- as.factor(qecbNew$Face)
 unique(qecbNew$Face)
 
 # list nb 33 - EGMP_PerreAntiochat.2016.04.07
 qecbNew$Face <- as.character(qecbNew$Face)
-qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_PerAnt_20160407_VImport.xlsx" & qecbNew$Référence.bloc == "avr16-PerAntB9sup", "face supérieure", qecbNew$Face)
-qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_PerAnt_20160407_VImport.xlsx" & qecbNew$Référence.bloc == "avr16-PerAntB10sup", "face supérieure", qecbNew$Face)
+qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_PerAnt_20160407_VImport.xlsx" && qecbNew$Référence.bloc == "avr16-PerAntB9sup", "face supérieure", qecbNew$Face)
+qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_PerAnt_20160407_VImport.xlsx" && qecbNew$Référence.bloc == "avr16-PerAntB10sup", "face supérieure", qecbNew$Face)
 qecbNew$Face <- as.factor(qecbNew$Face)
 unique(qecbNew$Face)
 
 # list nb 37 - EGMP_Chassiron.2016.03.09
 qecbNew$Face <- as.character(qecbNew$Face)
-qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_Chassiron_20160309&10_VImport.xlsx" & qecbNew$Référence.bloc == "mars16-ChassB9sup", "face supérieure", qecbNew$Face)
-qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_Chassiron_20160309&10_VImport.xlsx" & qecbNew$Référence.bloc == "mars16-ChasB10sup", "face supérieure", qecbNew$Face)
+qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_Chassiron_20160309&10_VImport.xlsx" && qecbNew$Référence.bloc == "mars16-ChassB9sup", "face supérieure", qecbNew$Face)
+qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_Chassiron_20160309&10_VImport.xlsx" && qecbNew$Référence.bloc == "mars16-ChasB10sup", "face supérieure", qecbNew$Face)
 qecbNew$Face <- as.factor(qecbNew$Face)
 unique(qecbNew$Face)
 
 # list nb 76 - ARMO_Verdelet.2015.03.23
 qecbNew$Face <- as.character(qecbNew$Face)
-qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_Verdelet_20150323_VImport.xlsx" & qecbNew$Référence.bloc == "mar15-VerB10inf", "face inférieure", qecbNew$Face)
+qecbNew$Face <- ifelse(qecbNew$ID.Fiche == "BDD_IVR&QECB_Verdelet_20150323_VImport.xlsx" && qecbNew$Référence.bloc == "mar15-VerB10inf", "face inférieure", qecbNew$Face)
 qecbNew$Face <- as.factor(qecbNew$Face)
 unique(qecbNew$Face)
 
 # list nb 116 - "GDMO_Locmariaquer.2018.09.10"
 qecbNew$Type.Bloc <- as.character(qecbNew$Type.Bloc)
-qecbNew$Type.Bloc <- ifelse(qecbNew$ID.Fiche == "2018-09-10-GDMO-CDB-001" & qecbNew$Numero.Photo == "2018-09-10_GDMO_01_CDB-5_sup_392578.jpg", "Roche en place", qecbNew$Type.Bloc)
+qecbNew$Type.Bloc <- ifelse(qecbNew$ID.Fiche == "2018-09-10-GDMO-CDB-001" && qecbNew$Numero.Photo == "2018-09-10_GDMO_01_CDB-5_sup_392578.jpg", "Roche en place", qecbNew$Type.Bloc)
 qecbNew$Type.Bloc <- as.factor(qecbNew$Type.Bloc)
-qecbNew$Quadrat.bis <- ifelse(qecbNew$ID.Fiche == "2018-09-10-GDMO-CDB-001" & qecbNew$Numero.Photo == "2018-09-10_GDMO_01_CDB-5_sup_392578.jpg", "Q5", qecbNew$Quadrat.bis)
-qecbNew %>% filter(!(ID.Fiche == "2018-09-10-GDMO-CDB-001" & Numero.Photo == "")) -> qecbNew
-filter(qecbNew, Site == "GDMO_Locmariaquer" & Date.fiche == "2018-09-10") -> issue.Locma
+qecbNew$Quadrat.bis <- ifelse(qecbNew$ID.Fiche == "2018-09-10-GDMO-CDB-001" && qecbNew$Numero.Photo == "2018-09-10_GDMO_01_CDB-5_sup_392578.jpg", "Q5", qecbNew$Quadrat.bis)
+qecbNew %>% dplyr::filter(!(qecbNew$ID.Fiche == "2018-09-10-GDMO-CDB-001" && qecbNew$Numero.Photo == "")) -> qecbNew
+dplyr::filter(qecbNew, qecbNew$Site == "GDMO_Locmariaquer" && qecbNew$date_fiche == "2018-09-10") -> issue.Locma
 
-#qecbNew  %>% filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[102]]) -> qecb.i
-qecbNew  %>% filter(Site.Year.Month.Day == "PDMO_Perharidy.2014.09.09") -> qecb.i
+#qecbNew  %>% dplyr::filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[102]]) -> qecb.i
+qecbNew  %>% dplyr::filter(qecbNew$Site.Year.Month.Day == "PDMO_Perharidy.2014.09.09") -> qecb.i
 
 # We are facing an issues with NA observations, because either they were not measured/counted, then they are effectively NAs; or these NAs = indeed "0"; but I cannot have NAs for variables that are included in the index determination, cfr if 5+0 = 5, 5+NA = NA; see for example Site.Year.Month.Day == "ARMO_Bilfot.2014.04.28", Nb.Spirobranchus.lamarckii.total is NA, and therefore VFSI.BM ends up to be NA as well ...
 # for now on, I'll change these NAs by 0
-#qecbNew  %>% filter(Site.Year.Month.Day == "ARMO_Bilfot.2014.04.28") -> qecb.i
+#qecbNew  %>% dplyr::filter(Site.Year.Month.Day == "ARMO_Bilfot.2014.04.28") -> qecb.i
 
 
 # Few sites to remove prior running the for loop
 
-qecbNew  %>% filter(Site.Year.Month.Day == "FINS_StNicolasGlenan.2016.04.08") -> qecb.i # no bloc fixe !
-qecbNew  %>% filter(Site.Year.Month.Day != "FINS_StNicolasGlenan.2016.04.08") -> qecbNew
+qecbNew  %>% dplyr::filter(qecbNew$Site.Year.Month.Day == "FINS_StNicolasGlenan.2016.04.08") -> qecb.i # no bloc fixe !
+qecbNew  %>% dplyr::filter(qecbNew$Site.Year.Month.Day != "FINS_StNicolasGlenan.2016.04.08") -> qecbNew
 
-qecbNew  %>% filter(Site.Year.Month.Day == "GDMO_Locmariaquer.2019.09.30") -> qecb.i # most faces of blocs mobiles do not correspond to each other; only 3 over 10 boulder have data for both face supérieure and face inférieure
-qecbNew  %>% filter(Site.Year.Month.Day != "GDMO_Locmariaquer.2019.09.30") -> qecbNew
+qecbNew  %>% dplyr::filter(qecbNew$Site.Year.Month.Day == "GDMO_Locmariaquer.2019.09.30") -> qecb.i # most faces of blocs mobiles do not correspond to each other; only 3 over 10 boulder have data for both face supérieure and face inférieure
+qecbNew  %>% dplyr::filter(qecbNew$Site.Year.Month.Day != "GDMO_Locmariaquer.2019.09.30") -> qecbNew
 
-#qecbNew  %>% filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[102]]) -> qecb.i
+#qecbNew  %>% dplyr::filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[102]]) -> qecb.i
 
 rm(df.list.loop, qecb.i
    #, qecb.val.list, qecb.val.qu.list
@@ -654,29 +568,29 @@ subset(qecbNew, is.na(qecbNew$Nb.Spirobranchus.lamarckii.total))
 nrow(subset(qecbNew, is.na(qecbNew$Nb.Spirobranchus.lamarckii.total)))
 subset(qecbNew, is.nan(qecbNew$Nb.Spirobranchus.lamarckii.total))
 subset(qecbNew, is.finite(qecbNew$Nb.Spirobranchus.lamarckii.total))
-nrow(filter(qecbNew, qecbNew$Nb.Spirobranchus.lamarckii.total %in% c(NA, "NaN", "Inf", "-Inf")))
+nrow(dplyr::filter(qecbNew, qecbNew$Nb.Spirobranchus.lamarckii.total %in% c(NA, "NaN", "Inf", "-Inf")))
 
-qecbNew.Spirobranchus <- (filter(qecbNew, Nb.Spirobranchus.lamarckii.total %in% c(NA, "NaN", "Inf", "-Inf")))
+qecbNew.Spirobranchus <- (dplyr::filter(qecbNew, qecbNew$Nb.Spirobranchus.lamarckii.total %in% c(NA, "NaN", "Inf", "-Inf")))
 qecbNew.Spirobranchus[, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B")] <- sapply(qecbNew.Spirobranchus[, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B")],as.character)
 (Spirobranchus.data <- subset(qecbNew.Spirobranchus, !is.na(qecbNew.Spirobranchus$Nb.Spirobranchus.lamarckii.1B) | !is.na(qecbNew.Spirobranchus$Nb.Spirobranchus.lamarckii.2B) | !is.na(qecbNew.Spirobranchus$Nb.Spirobranchus.lamarckii.3B) | !is.na(qecbNew.Spirobranchus$Nb.Spirobranchus.lamarckii.4B) | !is.na(qecbNew.Spirobranchus$Nb.Spirobranchus.lamarckii.5B))[, c("Site.Year.Month.Day", "Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total")])
 unique(Spirobranchus.data$Site.Year.Month.Day)
 
-Quemenes <- filter(qecbNew, Site == "FINS_Quemenes")
-Quemenes <- arrange(Quemenes, Date.fiche)
+Quemenes <- dplyr::filter(qecbNew, qecbNew$Site == "FINS_Quemenes")
+Quemenes <- dplyr::arrange(Quemenes, date_fiche)
 # for Quemenes, issue because for sampling date "FINS_Quemenes.2015.09.30" the 5 counts of Spirobranchus were encoded in 1B instead of total !!! I noticed this issue when mining data (see below), therefore I corrected before running below script for Spirobranchus. 
 qecbNew$Nb.Spirobranchus.lamarckii.total <- ifelse(qecbNew$Site.Year.Month.Day == "FINS_Quemenes.2015.09.30" & is.na(qecbNew$Nb.Spirobranchus.lamarckii.total), qecbNew$Nb.Spirobranchus.lamarckii.1B, qecbNew$Nb.Spirobranchus.lamarckii.total)
-(Quemenes <- filter(qecbNew, Site.Year.Month.Day == "FINS_Quemenes.2015.09.30")[, c("Site.Year.Month.Day", "Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total")])
+(Quemenes <- dplyr::filter(qecbNew, qecbNew$Site.Year.Month.Day == "FINS_Quemenes.2015.09.30")[, c("Site.Year.Month.Day", "Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total")])
 rm(Quemenes)
 
-Piegu <- filter(qecbNew, Site == "ARMO_Piegu")
-Piegu <- arrange(Piegu, Date.fiche)
+Piegu <- dplyr::filter(qecbNew, qecbNew$Site == "ARMO_Piegu")
+Piegu <- dplyr::arrange(Piegu, date_fiche)
 rm(Piegu)
 
-SeinKilaourou <- filter(qecbNew, Site == "FINS_SeinKilaourou")
-SeinKilaourou <- arrange(SeinKilaourou, Date.fiche)
+SeinKilaourou <- dplyr::filter(qecbNew, qecbNew$Site == "FINS_SeinKilaourou")
+SeinKilaourou <- dplyr::arrange(SeinKilaourou, date_fiche)
 # same issue with SeinKilaourou
 qecbNew$Nb.Spirobranchus.lamarckii.total <- ifelse(qecbNew$Site.Year.Month.Day == "FINS_SeinKilaourou.2015.04.21" & is.na(qecbNew$Nb.Spirobranchus.lamarckii.total), qecbNew$Nb.Spirobranchus.lamarckii.1B, qecbNew$Nb.Spirobranchus.lamarckii.total)
-(SeinKilaourou <- filter(qecbNew, Site.Year.Month.Day == "FINS_SeinKilaourou.2015.04.21")[, c("Site.Year.Month.Day", "Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total")])
+(SeinKilaourou <- dplyr::filter(qecbNew, qecbNew$Site.Year.Month.Day == "FINS_SeinKilaourou.2015.04.21")[, c("Site.Year.Month.Day", "Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total")])
 rm(SeinKilaourou)
 
 # some more issues however with "x100"count data
@@ -691,8 +605,8 @@ for (i in c(1:nrow(Spirobranchus))) {
   Spirobranchus$diff[[i]] <- Spirobranchus[i, "Nb.Spirobranchus.lamarckii.total"] - Spirobranchus[i, "mean.x.100"]
 } 
 Spirobranchus$diff <- abs(as.integer(Spirobranchus$diff))
-Spirobranchus <- arrange(Spirobranchus, desc(diff), mean.x.100)
-Spirobranchus <- arrange(filter(Spirobranchus, diff != 0 & mean.x.100 != 0), desc(diff))
+Spirobranchus <- dplyr::arrange(Spirobranchus, desc(diff), mean.x.100)
+Spirobranchus <- dplyr::arrange(dplyr::filter(Spirobranchus, Spirobranchus$diff != 0 & Spirobranchus$mean.x.100 != 0), desc(diff))
 
 # check it all in the qecbNew df
 
@@ -706,7 +620,7 @@ qecbNew$mean.x.100 <- as.character(qecbNew$mean.x.100)
 #subset(qecbNew, is.na(qecbNew$mean.x.200))[,"Nb.Spirobranchus.lamarckii.total"]
 #subset(qecbNew, is.nan(qecbNew$mean.x.200))[,"Nb.Spirobranchus.lamarckii.total"]
 
-sort(filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.Spirobranchus$id_qecb, "_", qecbNew.Spirobranchus$Site.Year.Month.Day, "_", qecbNew.Spirobranchus$Type.Bloc, "_", qecbNew.Spirobranchus$Numéro.Bloc.échantillon, "_", qecbNew.Spirobranchus$Face))[, "mean.x.100"])
+sort(dplyr::filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.Spirobranchus$id_qecb, "_", qecbNew.Spirobranchus$Site.Year.Month.Day, "_", qecbNew.Spirobranchus$Type.Bloc, "_", qecbNew.Spirobranchus$Numéro.Bloc.échantillon, "_", qecbNew.Spirobranchus$Face))[, "mean.x.100"])
 
 for (i in c(1:nrow(qecbNew))) {
   qecbNew$mean.x.100[[i]] <- ifelse(qecbNew$mean.x.100[[i]] == "NaN", NA, qecbNew$mean.x.100[[i]])
@@ -719,14 +633,14 @@ unique(qecbNew$Nb.Spirobranchus.lamarckii.total - qecbNew$mean.x.100)
 table(qecbNew$Nb.Spirobranchus.lamarckii.total - qecbNew$mean.x.100)
 qecbNew$Nb.Spirobranchus.lamarckii.total.diff <- abs((qecbNew$Nb.Spirobranchus.lamarckii.total - qecbNew$mean.x.100))
 Spirobranchus.diff <- qecbNew[, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total", "Nb.Spirobranchus.lamarckii.total.ini", "mean.x.100", "Nb.Spirobranchus.lamarckii.total.diff")]
-Spirobranchus.diff <- arrange(Spirobranchus.diff, desc(Nb.Spirobranchus.lamarckii.total.diff), mean.x.100)
-Spirobranchus.diff <- arrange(filter(Spirobranchus.diff, Nb.Spirobranchus.lamarckii.total.diff != 0 & mean.x.100 != 0), desc(Nb.Spirobranchus.lamarckii.total.diff))
+Spirobranchus.diff <- dplyr::arrange(Spirobranchus.diff, desc(Nb.Spirobranchus.lamarckii.total.diff), mean.x.100)
+Spirobranchus.diff <- dplyr::arrange(dplyr::filter(Spirobranchus.diff, Nb.Spirobranchus.lamarckii.total.diff != 0 & mean.x.100 != 0), desc(Nb.Spirobranchus.lamarckii.total.diff))
 
 qecbNew$Nb.Spirobranchus.lamarckii.total <- ifelse(qecbNew$Nb.Spirobranchus.lamarckii.total.diff != 0 & qecbNew$mean.x.100 != 0, qecbNew$mean.x.100, qecbNew$Nb.Spirobranchus.lamarckii.total)
 Spirobranchus.diff <- qecbNew[, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total", "Nb.Spirobranchus.lamarckii.total.ini", "mean.x.100", "Nb.Spirobranchus.lamarckii.total.diff")]
 Spirobranchus.diff$Nb.Spirobranchus.lamarckii.total.diff <- abs(as.integer(Spirobranchus.diff$Nb.Spirobranchus.lamarckii.total.diff))
-Spirobranchus.diff <- arrange(Spirobranchus.diff, desc(Nb.Spirobranchus.lamarckii.total.diff), mean.x.100)
-Spirobranchus.diff <- arrange(filter(Spirobranchus.diff, Nb.Spirobranchus.lamarckii.total.diff != 0 & mean.x.100 != 0), desc(Nb.Spirobranchus.lamarckii.total.diff))
+Spirobranchus.diff <- dplyr::arrange(Spirobranchus.diff, desc(Nb.Spirobranchus.lamarckii.total.diff), mean.x.100)
+Spirobranchus.diff <- dplyr::arrange(dplyr::filter(Spirobranchus.diff, Nb.Spirobranchus.lamarckii.total.diff != 0 & mean.x.100 != 0), desc(Nb.Spirobranchus.lamarckii.total.diff))
 # ok, change made when data x 100 was not correct.
 
 # finally, change NA by mean.x100 for Spirobranchus total
@@ -735,7 +649,7 @@ for (i in c(1:nrow(qecbNew))) {
   qecbNew$Nb.Spirobranchus.lamarckii.total[[i]] <- ifelse(qecbNew$Nb.Spirobranchus.lamarckii.total[[i]] %in% c(NA, "NaN", "Inf", "-Inf"), sum(qecbNew[i, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B")], na.rm = T )/sum(!is.na(qecbNew[i, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B")]))*100, qecbNew$Nb.Spirobranchus.lamarckii.total[[i]]) 
 } # sum of only NAs/0 = NaN; so replace NaN by Na
 
-sort(filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.Spirobranchus$id_qecb, "_", qecbNew.Spirobranchus$Site.Year.Month.Day, "_", qecbNew.Spirobranchus$Type.Bloc, "_", qecbNew.Spirobranchus$Numéro.Bloc.échantillon, "_", qecbNew.Spirobranchus$Face))[,"Nb.Spirobranchus.lamarckii.total"])
+sort(dplyr::filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.Spirobranchus$id_qecb, "_", qecbNew.Spirobranchus$Site.Year.Month.Day, "_", qecbNew.Spirobranchus$Type.Bloc, "_", qecbNew.Spirobranchus$Numéro.Bloc.échantillon, "_", qecbNew.Spirobranchus$Face))[,"Nb.Spirobranchus.lamarckii.total"])
 
 for (i in c(1:nrow(qecbNew))) {
   qecbNew$Nb.Spirobranchus.lamarckii.total[[i]] <- ifelse(qecbNew$Nb.Spirobranchus.lamarckii.total[[i]] == "NaN", NA, qecbNew$Nb.Spirobranchus.lamarckii.total[[i]])
@@ -747,8 +661,8 @@ unique(qecbNew$Nb.Spirobranchus.lamarckii.total - qecbNew$Nb.Spirobranchus.lamar
 table(qecbNew$Nb.Spirobranchus.lamarckii.total - qecbNew$Nb.Spirobranchus.lamarckii.total.ini)
 qecbNew$Nb.Spirobranchus.lamarckii.total.diff <- abs(qecbNew$Nb.Spirobranchus.lamarckii.total - qecbNew$Nb.Spirobranchus.lamarckii.total.ini)
 Spirobranchus.diff <- qecbNew[, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total", "Nb.Spirobranchus.lamarckii.total.ini", "mean.x.100", "Nb.Spirobranchus.lamarckii.total.diff")]
-Spirobranchus.diff <- arrange(Spirobranchus.diff, desc(Nb.Spirobranchus.lamarckii.total.diff), mean.x.100)
-Spirobranchus.diff <- arrange(filter(Spirobranchus.diff, Nb.Spirobranchus.lamarckii.total.diff != 0 & mean.x.100 != 0), desc(Nb.Spirobranchus.lamarckii.total.diff))
+Spirobranchus.diff <- dplyr::arrange(Spirobranchus.diff, desc(Nb.Spirobranchus.lamarckii.total.diff), mean.x.100)
+Spirobranchus.diff <- dplyr::arrange(dplyr::filter(Spirobranchus.diff, Nb.Spirobranchus.lamarckii.total.diff != 0 & mean.x.100 != 0), desc(Nb.Spirobranchus.lamarckii.total.diff))
 table(qecbNew$Nb.Spirobranchus.lamarckii.total.diff)
 length(na.omit(qecbNew$Nb.Spirobranchus.lamarckii.total))
 sum(is.na(qecbNew$Nb.Spirobranchus.lamarckii.total))
@@ -770,9 +684,9 @@ nrow(subset(qecbNew, is.na(qecbNew$Nb.spirorbis.total)))
 subset(qecbNew, is.nan(qecbNew$Nb.spirorbis.total))
 subset(qecbNew, is.finite(qecbNew$Nb.spirorbis.total))
 
-nrow(filter(qecbNew, qecbNew$Nb.spirorbis.total %in% c(NA, "NaN", "Inf", "-Inf")))
+nrow(dplyr::filter(qecbNew, qecbNew$Nb.spirorbis.total %in% c(NA, "NaN", "Inf", "-Inf")))
 
-qecbNew.spirorbis <- (filter(qecbNew, Nb.spirorbis.total %in% c(NA, "NaN", "Inf", "-Inf")))
+qecbNew.spirorbis <- (dplyr::filter(qecbNew, Nb.spirorbis.total %in% c(NA, "NaN", "Inf", "-Inf")))
 qecbNew.spirorbis[, c("Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A")] <- sapply(qecbNew.spirorbis[, c("Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A")],as.character)
 (spirorbis.data <- subset(qecbNew.spirorbis, !is.na(qecbNew.spirorbis$Nb.spirorbis.1A) | !is.na(qecbNew.spirorbis$Nb.spirorbis.2A) | !is.na(qecbNew.spirorbis$Nb.spirorbis.3A) | !is.na(qecbNew.spirorbis$Nb.spirorbis.4A) | !is.na(qecbNew.spirorbis$Nb.spirorbis.5A))[, c("Site.Year.Month.Day", "Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A", "Nb.spirorbis.total")])
 unique(spirorbis.data$Site.Year.Month.Day)
@@ -791,10 +705,10 @@ for (i in c(1:nrow(spirorbis))) {
   spirorbis$diff[[i]] <- spirorbis[i, "Nb.spirorbis.total"] - spirorbis[i, "mean.x.200"]
 } 
 spirorbis$diff <- abs(as.integer(spirorbis$diff))
-spirorbis <- arrange(spirorbis, desc(diff), mean.x.200)
-(GONB_IlotStMichel.2015.04.18 <- filter(spirorbis, Site.Year.Month.Day == "GONB_IlotStMichel.2015.04.18"))
+spirorbis <- dplyr::arrange(spirorbis, desc(diff), mean.x.200)
+(GONB_IlotStMichel.2015.04.18 <- dplyr::filter(spirorbis, Site.Year.Month.Day == "GONB_IlotStMichel.2015.04.18"))
 rm(GONB_IlotStMichel.2015.04.18)
-spirorbis <- arrange(filter(spirorbis, diff != 0 & mean.x.200 != 0), desc(diff))
+spirorbis <- dplyr::arrange(dplyr::filter(spirorbis, diff != 0 & mean.x.200 != 0), desc(diff))
 
 # check it all in the qecbNew df
 
@@ -808,7 +722,7 @@ qecbNew$mean.x.200 <- as.character(qecbNew$mean.x.200)
 #subset(qecbNew, is.na(qecbNew$mean.x.200))[,"Nb.spirorbis.total"]
 #subset(qecbNew, is.nan(qecbNew$mean.x.200))[,"Nb.spirorbis.total"]
 
-sort(filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.spirorbis$id_qecb, "_", qecbNew.spirorbis$Site.Year.Month.Day, "_", qecbNew.spirorbis$Type.Bloc, "_", qecbNew.spirorbis$Numéro.Bloc.échantillon, "_", qecbNew.spirorbis$Face))[, "mean.x.200"])
+sort(dplyr::filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.spirorbis$id_qecb, "_", qecbNew.spirorbis$Site.Year.Month.Day, "_", qecbNew.spirorbis$Type.Bloc, "_", qecbNew.spirorbis$Numéro.Bloc.échantillon, "_", qecbNew.spirorbis$Face))[, "mean.x.200"])
 
 for (i in c(1:nrow(qecbNew))) {
   qecbNew$mean.x.200[[i]] <- ifelse(qecbNew$mean.x.200[[i]] == "NaN", NA, qecbNew$mean.x.200[[i]])
@@ -821,14 +735,14 @@ unique(qecbNew$Nb.spirorbis.total - qecbNew$mean.x.200)
 table(qecbNew$Nb.spirorbis.total - qecbNew$mean.x.200)
 qecbNew$Nb.spirorbis.total.diff <- abs((qecbNew$Nb.spirorbis.total - qecbNew$mean.x.200))
 spirorbis.diff <- qecbNew[, c("Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A", "Nb.spirorbis.total", "Nb.spirorbis.total.ini", "mean.x.200", "Nb.spirorbis.total.diff")]
-spirorbis.diff <- arrange(spirorbis.diff, desc(Nb.spirorbis.total.diff), mean.x.200)
-spirorbis.diff <- arrange(filter(spirorbis.diff, Nb.spirorbis.total.diff != 0 & mean.x.200 != 0), desc(Nb.spirorbis.total.diff))
+spirorbis.diff <- dplyr::arrange(spirorbis.diff, desc(Nb.spirorbis.total.diff), mean.x.200)
+spirorbis.diff <- dplyr::arrange(dplyr::filter(spirorbis.diff, Nb.spirorbis.total.diff != 0 & mean.x.200 != 0), desc(Nb.spirorbis.total.diff))
 
 qecbNew$Nb.spirorbis.total <- ifelse(qecbNew$Nb.spirorbis.total.diff != 0 & qecbNew$mean.x.200 != 0, qecbNew$mean.x.200, qecbNew$Nb.spirorbis.total)
 spirorbis.diff <- qecbNew[, c("Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A", "Nb.spirorbis.total", "Nb.spirorbis.total.ini", "mean.x.200", "Nb.spirorbis.total.diff")]
 spirorbis.diff$Nb.spirorbis.total.diff <- abs(as.integer(spirorbis.diff$Nb.spirorbis.total.diff))
-spirorbis.diff <- arrange(spirorbis.diff, desc(Nb.spirorbis.total.diff), mean.x.200)
-spirorbis.diff <- arrange(filter(spirorbis.diff, Nb.spirorbis.total.diff != 0 & mean.x.200 != 0), desc(Nb.spirorbis.total.diff))
+spirorbis.diff <- dplyr::arrange(spirorbis.diff, desc(Nb.spirorbis.total.diff), mean.x.200)
+spirorbis.diff <- dplyr::arrange(dplyr::filter(spirorbis.diff, Nb.spirorbis.total.diff != 0 & mean.x.200 != 0), desc(Nb.spirorbis.total.diff))
 # ok, change made when data x 200 was not correct.
 
 # finally, change NA by mean.x200 for spirorbis total
@@ -837,7 +751,7 @@ for (i in c(1:nrow(qecbNew))) {
   qecbNew$Nb.spirorbis.total[[i]] <- ifelse(qecbNew$Nb.spirorbis.total[[i]] %in% c(NA, "NaN", "Inf", "-Inf"), sum(qecbNew[i, c("Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A")], na.rm = T )/sum(!is.na(qecbNew[i, c("Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A")]))*200, qecbNew$Nb.spirorbis.total[[i]]) 
 } # sum of only NAs/0 = NaN; so replace NaN by Na
 
-sort(filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.spirorbis$id_qecb, "_", qecbNew.spirorbis$Site.Year.Month.Day, "_", qecbNew.spirorbis$Type.Bloc, "_", qecbNew.spirorbis$Numéro.Bloc.échantillon, "_", qecbNew.spirorbis$Face))[,"Nb.spirorbis.total"])
+sort(dplyr::filter(qecbNew, paste0(qecbNew$id_qecb, "_", qecbNew$Site.Year.Month.Day, "_", qecbNew$Type.Bloc, "_", qecbNew$Numéro.Bloc.échantillon, "_", qecbNew$Face) %in% paste0(qecbNew.spirorbis$id_qecb, "_", qecbNew.spirorbis$Site.Year.Month.Day, "_", qecbNew.spirorbis$Type.Bloc, "_", qecbNew.spirorbis$Numéro.Bloc.échantillon, "_", qecbNew.spirorbis$Face))[,"Nb.spirorbis.total"])
 
 for (i in c(1:nrow(qecbNew))) {
   qecbNew$Nb.spirorbis.total[[i]] <- ifelse(qecbNew$Nb.spirorbis.total[[i]] == "NaN", NA, qecbNew$Nb.spirorbis.total[[i]])
@@ -849,8 +763,8 @@ unique(qecbNew$Nb.spirorbis.total - qecbNew$Nb.spirorbis.total.ini)
 table(qecbNew$Nb.spirorbis.total - qecbNew$Nb.spirorbis.total.ini)
 qecbNew$Nb.spirorbis.total.diff <- abs(qecbNew$Nb.spirorbis.total - qecbNew$Nb.spirorbis.total.ini)
 spirorbis.diff <- qecbNew[, c("Nb.spirorbis.1A", "Nb.spirorbis.2A", "Nb.spirorbis.3A", "Nb.spirorbis.4A", "Nb.spirorbis.5A", "Nb.spirorbis.total", "Nb.spirorbis.total.ini", "mean.x.200", "Nb.spirorbis.total.diff")]
-spirorbis.diff <- arrange(spirorbis.diff, desc(Nb.spirorbis.total.diff), mean.x.200)
-spirorbis.diff <- arrange(filter(spirorbis.diff, Nb.spirorbis.total.diff != 0 & mean.x.200 != 0), desc(Nb.spirorbis.total.diff))
+spirorbis.diff <- dplyr::arrange(spirorbis.diff, desc(Nb.spirorbis.total.diff), mean.x.200)
+spirorbis.diff <- dplyr::arrange(dplyr::filter(spirorbis.diff, Nb.spirorbis.total.diff != 0 & mean.x.200 != 0), desc(Nb.spirorbis.total.diff))
 table(qecbNew$Nb.spirorbis.total.diff)
 length(na.omit(qecbNew$Nb.spirorbis.total))
 sum(is.na(qecbNew$Nb.spirorbis.total))
@@ -861,7 +775,7 @@ qecbNew <- subset(qecbNew, select = -c(Nb.spirorbis.total.ini, mean.x.200, Nb.sp
 rm(qecbNew.spirorbis, spirorbis, spirorbis.data, spirorbis.diff)
 
 
-# filter for abnormal data
+# dplyr::filter for abnormal data
 
 qecbNewhist. <- qecbNew
 ylab. = "fréquence"
@@ -938,16 +852,16 @@ sapply(names(hist.[, c(3:ncol(hist.))]),
 
 par(mfrow=c(1,1))
 
-filter(qecbNew, X..algues.brunes > 100)[, c("Site", "Date.fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "X..algues.brunes")]
+dplyr::filter(qecbNew, X..algues.brunes > 100)[, c("Site", "date_fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "X..algues.brunes")]
 qecbNew$X..algues.brunes <- ifelse(qecbNew$X..algues.brunes > 100, 100, qecbNew$X..algues.brunes)
-filter(qecbNew, X..algues.rouges > 100)[, c("Site", "Date.fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "X..algues.rouges")]
+dplyr::filter(qecbNew, X..algues.rouges > 100)[, c("Site", "date_fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "X..algues.rouges")]
 qecbNew$X..algues.rouges <- ifelse(qecbNew$X..algues.rouges > 100, 100, qecbNew$X..algues.rouges)
-filter(qecbNew, Nb.Phallusia.mamillata > 10)[, c("Site", "Date.fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.Phallusia.mamillata")]
-filter(qecbNew, Nb.Tethya.aurantium > 2)[, c("Site", "Date.fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.Tethya.aurantium")]
-filter(qecbNew, Nb.spirorbis.total > 15000)[, c("Site", "Date.fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.spirorbis.total")]
-ARMO_IlePlate <- filter(qecbNew, Site == "ARMO_IlePlate" & Date.fiche == "2015-10-29")
+dplyr::filter(qecbNew, Nb.Phallusia.mamillata > 10)[, c("Site", "date_fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.Phallusia.mamillata")]
+dplyr::filter(qecbNew, Nb.Tethya.aurantium > 2)[, c("Site", "date_fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.Tethya.aurantium")]
+dplyr::filter(qecbNew, Nb.spirorbis.total > 15000)[, c("Site", "date_fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.spirorbis.total")]
+ARMO_IlePlate <- dplyr::filter(qecbNew, Site == "ARMO_IlePlate" & date_fiche == "2015-10-29")
 rm(ARMO_IlePlate)
-filter(qecbNew, Nb.Nucella.lapilus..Pourpre. > 20)[, c("Site", "Date.fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.Nucella.lapilus..Pourpre.")]
+dplyr::filter(qecbNew, Nb.Nucella.lapilus..Pourpre. > 20)[, c("Site", "date_fiche", "Type.Bloc", "Numéro.Bloc.échantillon", "Face", "Nb.Nucella.lapilus..Pourpre.")]
 
 rm(qecbNewhist., ylab., hist.)
 
@@ -1024,7 +938,7 @@ qecbNew$Nb.Ostrea.edulis <- ifelse((substr(qecbNew$Site, 1, 4) %in% c("EGMP", "B
 
 # QEBM2 NaN ??
 # For field survey "FINS_StNicolasGlenan.2016.04.11", no "Bloc fixé" or "Roche en place"; therefore not possible to calculate QEBM2, and consequently not possible to determine qecb
-#qecbNew  %>% filter(Site.Year.Month.Day == "FINS_StNicolasGlenan.2016.04.11") -> qecb.i
+#qecbNew  %>% dplyr::filter(Site.Year.Month.Day == "FINS_StNicolasGlenan.2016.04.11") -> qecb.i
 
 #######################################
 
@@ -1062,7 +976,7 @@ qecbNew <- qecbNew[complete.cases(qecbNew[ , c("X..algues.brunes",
 
 for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
-qecbNew  %>% filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
+qecbNew  %>% dplyr::filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
 
 {
   
@@ -1071,8 +985,8 @@ qecbNew  %>% filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[
 
 # VFS.BM Bloc mobile
 
-qecb.i %>% filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+qecb.i %>% dplyr::filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 
 (  (df.$X..algues.brunes + df.$X..algues.rouges)
   +  df.$X..Lithophyllum
@@ -1087,8 +1001,8 @@ VFS.BM
 
 # VFI.BM Bloc mobile         
 
-qecb.i %>% filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 (  (df.$X..Eponges + df.$X..Ascidies.Coloniales + df.$X..Ascidies.Solitaires)
   +  df.$X..Lithophyllum 
 ) - 
@@ -1102,7 +1016,7 @@ VFI.BM
 
 # VFSI.BM Bloc mobile
 
-qecb.i %>% filter(Type.Bloc == "Bloc mobile") -> df.
+qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile") -> df.
 num.bloc <- as.vector(sort(unique(df.$Numéro.Bloc.échantillon)))
 VFSI.BM <- NA
 
@@ -1111,16 +1025,16 @@ for (k in c(1:length(na.omit(num.bloc)))) {
   j. <- num.bloc[k]
   
   VFSIn. <- unname(unlist(
-    ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
-       + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
+    ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
+       + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
     ) / 1000 )
     -
       ( 
-        ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-           + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
+        ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
+           + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
         ) / 100 )
-        + ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
-             + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
+        + ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
+             + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
         ) / 100 )
       )
   )) 
@@ -1144,8 +1058,8 @@ VFSI.BM
 
 # VrFS.BF moyenne Bloc fixé ; = VDRmoyenne in excel file
 
-qecb.i %>% filter(Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+qecb.i %>% dplyr::filter(Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 (  (df.$X..algues.brunes + df.$X..algues.rouges)
   +  df.$X..Lithophyllum
   + (df.$Nb.Littorina.obtusata + df.$Nb.Gibbula.cineraria + df.$Nb.Gibbula.pennanti + df.$Nb.Gibbula.umbilicalis)
@@ -1155,7 +1069,7 @@ df. <- arrange(df., Numéro.Bloc.échantillon)
       +  df.$X..Roche.Nue
   ) -> VrFS.BF # different from Pauline, check with her
 VrFS.BF
-VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(VrFS.BF)))
+VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(VrFS.BF)))
 
 
 # (G-(H+I)) Bloc fixé & Roche en place
@@ -1164,7 +1078,7 @@ VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mo
   - (df.$X..Balanes.Vivantes/100 + df.$Nb.Spirobranchus.lamarckii.total/100)
 ) -> `(G-(H+I))BF`
 `(G-(H+I))BF`
-`(G-(H+I))BF` <- c(`(G-(H+I))BF`, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(`(G-(H+I))BF`)))
+`(G-(H+I))BF` <- c(`(G-(H+I))BF`, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(`(G-(H+I))BF`)))
 
 
 # VrFS.BF.moy
@@ -1174,8 +1088,8 @@ VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mo
 
 # (G-(H+I)S.BM) Bloc mobile face supérieure
 
-qecb.i %>% filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 ( df.$Nb.spirorbis.total/1000
   - (df.$X..Balanes.Vivantes/100 + df.$Nb.Spirobranchus.lamarckii.total/100)
 ) -> `(G-(H+I))S.BM`
@@ -1210,7 +1124,7 @@ mean(QEBM.2, na.rm = T) -> QECB
 
   
 qecb.val.qu.list[[i]] <- data.frame(id_qecb = rep(unique(qecb.i$id_qecb), length(QEBM.2)), Site.Year.Month.Day = rep(unique(qecb.i$Site.Year.Month.Day), length(QEBM.2)),
-Numéro.Bloc = unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1],
+Numéro.Bloc = unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1],
 VFS.BM,
 VFI.BM,
 VFSI.BM,
@@ -1245,14 +1159,14 @@ qecb.val.list <- vector("list", length(unique(qecbNew$Site.Year.Month.Day)))
 
 for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
   
-  qecbNew  %>% filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
+  qecbNew  %>% dplyr::filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
   
-  nb. <- as.vector(unlist(intersect(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"], filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])))
+  nb. <- as.vector(unlist(intersect(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"], dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])))
   
   Bloc.nb <- c(
     paste0("Bloc mobile", " - ", "face supérieure", " - ", nb.), 
     paste0("Bloc mobile", " - ", "face inférieure", " - ", nb.),
-    paste0(as.vector(unlist(filter(qecb.i, Type.Bloc != "Bloc mobile")["Type.Bloc"])), " - ", as.vector(unlist(filter(qecb.i, Type.Bloc != "Bloc mobile")["Face"])), " - ", as.vector(unlist(filter(qecb.i, Type.Bloc != "Bloc mobile")["Numéro.Bloc.échantillon"]))) 
+    paste0(as.vector(unlist(dplyr::filter(qecb.i, Type.Bloc != "Bloc mobile")["Type.Bloc"])), " - ", as.vector(unlist(dplyr::filter(qecb.i, Type.Bloc != "Bloc mobile")["Face"])), " - ", as.vector(unlist(dplyr::filter(qecb.i, Type.Bloc != "Bloc mobile")["Numéro.Bloc.échantillon"]))) 
   )
   
   qecb.i$Bloc <- paste0(qecb.i$Type.Bloc, " - ", qecb.i$Face, " - ", qecb.i$Numéro.Bloc.échantillon)
@@ -1266,8 +1180,8 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VFS.BM Bloc mobile
     
-    qecb.i %>% filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     A.bmS <- df.$X..algues.brunes + df.$X..algues.rouges
     B.bmS <-  df.$X..Lithophyllum
@@ -1289,8 +1203,8 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VFI.BM Bloc mobile         
     
-    qecb.i %>% filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     D.bmI <- df.$X..Eponges + df.$X..Ascidies.Coloniales + df.$X..Ascidies.Solitaires
     B.bmI <- df.$X..Lithophyllum 
@@ -1312,7 +1226,7 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VFSI.BM Bloc mobile
     
-    qecb.i %>% filter(Type.Bloc == "Bloc mobile") -> df.
+    qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile") -> df.
     num.bloc <- as.vector(sort(unique(df.$Numéro.Bloc.échantillon)))
     
     G.bmSI <- NA
@@ -1324,22 +1238,22 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
       j. <- num.bloc[k]
       
       GIn. <- unname(unlist(
-        (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
-           + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
+        (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
+           + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
         ) / 1000 ))
       
       G.bmSI <<- c(G.bmSI, GIn.)
       
       HIn. <- unname(unlist(  
-        (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-               + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
+        (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
+               + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
             ) / 100 ))
       
       H.bmSI <<- c(H.bmSI, HIn.)
       
       LIn. <- unname(unlist(    
-        (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
-                 + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
+        (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
+                 + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
             ) / 100 ))
     
       L.bmSI <<- c(L.bmSI, LIn.) # To avoid error message "Error in I <<- c(I, IIn.) : cannot change value of locked binding for 'I'"
@@ -1360,16 +1274,16 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
       j. <- num.bloc[k]
       
       VFSIn. <- unname(unlist(
-        ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
-           + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
+        ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
+           + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
         ) / 1000 )
         -
           ( 
-            ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-               + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
+            ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
+               + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
             ) / 100 )
-            + ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
-                 + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
+            + ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
+                 + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
             ) / 100 )
           )
       )) 
@@ -1393,8 +1307,8 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VrFS.BF moyenne Bloc fixé ; = VDRmoyenne in excel file
     
-    qecb.i %>% filter(Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     A.bf <- df.$X..algues.brunes + df.$X..algues.rouges
     B.bf <- df.$X..Lithophyllum
@@ -1403,12 +1317,12 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     E.bf <- df.$X..algues.vertes
     F.bf <- df.$X..Roche.Nue
     
-    A.bf <- c(A.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(A.bf)))
-    B.bf <- c(B.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(B.bf)))
-    C.bf <- c(C.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(C.bf)))
-    D.bf <- c(D.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(D.bf)))
-    E.bf <- c(E.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(E.bf)))
-    F.bf <- c(F.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(F.bf)))
+    A.bf <- c(A.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(A.bf)))
+    B.bf <- c(B.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(B.bf)))
+    C.bf <- c(C.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(C.bf)))
+    D.bf <- c(D.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(D.bf)))
+    E.bf <- c(E.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(E.bf)))
+    F.bf <- c(F.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(F.bf)))
     
     (  (df.$X..algues.brunes + df.$X..algues.rouges)
       +  df.$X..Lithophyllum
@@ -1419,7 +1333,7 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
           +  df.$X..Roche.Nue
       ) -> VrFS.BF # different from Pauline, check with her
     VrFS.BF
-    VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(VrFS.BF)))
+    VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(VrFS.BF)))
     
     
     # (G-(H+I)) Bloc fixé & Roche en place
@@ -1428,15 +1342,15 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     H.bf <- df.$X..Balanes.Vivantes/100
     I.bf <- df.$Nb.Spirobranchus.lamarckii.total/100
     
-    G.bf<- c(G.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(G.bf)))
-    H.bf<- c(H.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(H.bf)))
-    I.bf<- c(I.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(I.bf)))
+    G.bf<- c(G.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(G.bf)))
+    H.bf<- c(H.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(H.bf)))
+    I.bf<- c(I.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(I.bf)))
     
     ( df.$Nb.spirorbis.total/1000
       - (df.$X..Balanes.Vivantes/100 + df.$Nb.Spirobranchus.lamarckii.total/100)
     ) -> `(G-(H+I))BF`
     `(G-(H+I))BF`
-    `(G-(H+I))BF` <- c(`(G-(H+I))BF`, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(`(G-(H+I))BF`)))
+    `(G-(H+I))BF` <- c(`(G-(H+I))BF`, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(`(G-(H+I))BF`)))
     
     
     # VrFS.BF.moy
@@ -1446,8 +1360,8 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # (G-(H+I)S.BM) Bloc mobile face supérieure
     
-    qecb.i %>% filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     G.bmS <- df.$Nb.spirorbis.total/1000
     H.bmS <- df.$X..Balanes.Vivantes/100 
@@ -1487,12 +1401,12 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
   
   
   qecb.val.qu.list[[i]] <- data.frame(id_qecb = rep(unique(qecb.i$id_qecb), length(QEBM.2)), Site.Year.Month.Day = rep(unique(qecb.i$Site.Year.Month.Day), length(QEBM.2)),
-                                      Boulder.nb.bmS = sort(unique(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]),
-                                      Boulder.nb.bmI = sort(unique(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])[,1]),
-                                      Boulder.nb.bf = c(sort(unique(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]), rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]) - length(unique(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]))),
-                                      Quadrat.bmS = sort(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Quadrat.bis"][,1]),
-                                      Quadrat.bmI = sort(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Quadrat.bis"][,1]),
-                                      Quadrat.bf = c(sort(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]), rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]))),
+                                      Boulder.nb.bmS = sort(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]),
+                                      Boulder.nb.bmI = sort(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])[,1]),
+                                      Boulder.nb.bf = c(sort(unique(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]), rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]) - length(unique(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]))),
+                                      Quadrat.bmS = sort(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Quadrat.bis"][,1]),
+                                      Quadrat.bmI = sort(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Quadrat.bis"][,1]),
+                                      Quadrat.bf = c(sort(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]), rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]))),
                                       A.bmS,
                                       B.bmS,
                                       C.bmS,
@@ -1549,14 +1463,14 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
 
 library(tibble)
 Region <- rep(NA, nrow(qecbNew))
-qecbNew <- add_column(qecbNew, Region, .after = "Site.bis")
+qecbNew <- tibble::add_column(qecbNew, Region, .after = "Site_bis")
 qecbNew$Region <- ifelse(qecbNew$Site %in% c("EGMP_GroinCou", "EGMP_PasEmsembert",    "EGMP_BreeBains", "EGMP_PerreAntiochat", "EGMP_Chassiron", "BASQ_FlotsBleusZP", "BASQ_FlotsBleusZF"), "EGMP.BASQ", "Bretagne")
 rm(Region)
-qecbNew <- arrange(qecbNew, Region, Site.Year.Month.Day, Type.Bloc, Numéro.Bloc.échantillon, Face)
+qecbNew <- dplyr::arrange(qecbNew, Region, Site.Year.Month.Day, Type.Bloc, Numéro.Bloc.échantillon, Face)
 
-qecbNew.EGMP.BASQ <- filter(qecbNew, (substr(qecbNew$Site, 1, 4) %in% c("EGMP", "BASQ")) == TRUE & Type.Bloc == "Bloc mobile" & Face == "face supérieure")
+qecbNew.EGMP.BASQ <- dplyr::filter(qecbNew, (substr(qecbNew$Site, 1, 4) %in% c("EGMP", "BASQ")) == TRUE & Type.Bloc == "Bloc mobile" & Face == "face supérieure")
 `%notin%` <- Negate(`%in%`)
-qecbNew.Bretagne <- filter(qecbNew, (substr(qecbNew$Site, 1, 4) %notin% c("EGMP", "BASQ")) == TRUE & Type.Bloc == "Bloc mobile" & Face == "face supérieure")
+qecbNew.Bretagne <- dplyr::filter(qecbNew, (substr(qecbNew$Site, 1, 4) %notin% c("EGMP", "BASQ")) == TRUE & Type.Bloc == "Bloc mobile" & Face == "face supérieure")
 
 # I have to repeat below loop because only 100 windows plot at a time ...
 for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
@@ -1568,15 +1482,15 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
   #i <- 18
   #i <- 19
   
-  qecbNew  %>% filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
+  qecbNew  %>% dplyr::filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
 
   qecb.i$X..Surface.Accolement <- ifelse(is.na(qecb.i$X..Surface.Accolement) == TRUE & qecb.i$Type.Bloc == "Bloc mobile", 0, qecb.i$X..Surface.Accolement)
   
-qecb.i %>% filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.BM.FS # to keep a version of it for later on correction for accollement for BM FI
+qecb.i %>% dplyr::filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.BM.FS # to keep a version of it for later on correction for accollement for BM FI
 #df. <- df.BM.FS
 
-qecb.i %>% filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
-df. <- arrange(df., Numéro.Bloc.échantillon)
+qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
+df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
 
 unique(qecbNew$Couleur.dominante)
 unique(substr(qecbNew$Site, 1, 4))
@@ -1645,8 +1559,8 @@ if (unique(substr(qecb.i$Site, 1, 4)) %in% c("EGMP", "BASQ")) {
 
 # accolement function according to recent 'retournement'
 
-qecbNew %>% filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.BM.FS
-qecbNew %>% filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.BM.FI
+qecbNew %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.BM.FS
+qecbNew %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.BM.FI
 head(df.BM.FS[, c("Region", "Site.Year.Month.Day", "Type.Bloc", "Numéro.Bloc.échantillon", "Face")])
 head(df.BM.FI[, c("Region", "Site.Year.Month.Day", "Type.Bloc", "Numéro.Bloc.échantillon", "Face")])
 tail(df.BM.FS[, c("Region", "Site.Year.Month.Day", "Type.Bloc", "Numéro.Bloc.échantillon", "Face")])
@@ -1666,7 +1580,7 @@ acco.fct <- function(var.) {
         df.BM.FS$Couleur.dominante[[i]] %in% c("Blanche", "Verte", "Blanche-Verte", "Colorée"), df.BM.FI[i, var.] / (100 - df.BM.FI$X..Surface.Accolement[[i]]) * 100, df.BM.FI[i, var.])
     } else {
       ifelse(df.BM.FS$Couleur.dominante[[i]] %in% c("Blanche", "Verte", "Blanche-Verte", "Colorée") 
-             & df.BM.FI$X..Surface.Accolement[[i]] != 0 # I have to use it in filter this time as well for EGMP- BASQ (but not for Bretagne, although could be added, same result); identical/repeated measure for BM.FI and BM.FS
+             & df.BM.FI$X..Surface.Accolement[[i]] != 0 # I have to use it in dplyr::filter this time as well for EGMP- BASQ (but not for Bretagne, although could be added, same result); identical/repeated measure for BM.FI and BM.FS
              & df.BM.FS$X..Mytilus.sp.[[i]] == 0, df.BM.FI[i, var.] / (100 - df.BM.FI$X..Surface.Accolement[[i]]) * 100, df.BM.FI[i, var.])
     }
     
@@ -1683,7 +1597,7 @@ col.accol. <- data.frame(Site = df.BM.FI$Site, Site.Year.Month.Day = df.BM.FI$Si
 sort(df.BM.FI[, "X..Eponges"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.$X..Eponges.BM.FI.pre. <- df.BM.FI[, "X..Eponges"]
 acco.fct("X..Eponges")
-col.accol. <- rename(col.accol., X..Eponges.BM.FI.post = var.cor.acco.)
+col.accol. <- dplyr::rename(col.accol., X..Eponges.BM.FI.post = var.cor.acco.)
 sort(col.accol.[, "X..Eponges.BM.FI.post"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.[, "X..Eponges.diff."] <- col.accol.[, "X..Eponges.BM.FI.post"]/col.accol.[, "X..Eponges.BM.FI.pre."]*100-100
 col.accol.[, "X..Eponges.diff."] <- ifelse(is.nan(col.accol.[, "X..Eponges.diff."]), NA, col.accol.[, "X..Eponges.diff."])
@@ -1692,15 +1606,15 @@ hist(col.accol.$X..Eponges.BM.FI.pre., main = "X..Eponges", xlab = "pre-corectio
 hist(col.accol.[, "X..Eponges.BM.FI.post"], main = "X..Eponges", xlab = "post-corection")
 hist(df.BM.FI[as.vector(which(abs(col.accol.$X..Eponges.BM.FI.pre. - col.accol.[, "X..Eponges.BM.FI.post"]) != 0)), "X..Eponges"], main = "X..Eponges", xlab = "diff. post-pre != 0")
 par(mfrow=c(1,1))
-check <- arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Eponges.BM.FI.pre.", "X..Eponges.BM.FI.post", "X..Eponges.diff.")], desc(X..Eponges.BM.FI.post))
-nrow(filter(col.accol., X..Eponges.diff. > 0))/nrow(col.accol.)*100
+check <- dplyr::arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Eponges.BM.FI.pre.", "X..Eponges.BM.FI.post", "X..Eponges.diff.")], desc(X..Eponges.BM.FI.post))
+nrow(dplyr::filter(col.accol., X..Eponges.diff. > 0))/nrow(col.accol.)*100
 par(mfrow=c(1,2))
-hist(as.vector(unlist(filter(col.accol., X..Eponges.diff. > 0)["X..Eponges.diff."])), breaks = 100, main = "X..Eponges", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(filter(col.accol., X..Eponges.diff. > 0)["X..Eponges.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(filter(col.accol., X..Eponges.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Eponges.BM.FI.post"]) <= 100, 100, max(filter(col.accol., X..Eponges.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Eponges.BM.FI.post"]))), main = "X..Eponges", xlab = "data corrected") 
+hist(as.vector(unlist(dplyr::filter(col.accol., X..Eponges.diff. > 0)["X..Eponges.diff."])), breaks = 100, main = "X..Eponges", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(dplyr::filter(col.accol., X..Eponges.diff. > 0)["X..Eponges.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(dplyr::filter(col.accol., X..Eponges.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Eponges.BM.FI.post"]) <= 100, 100, max(dplyr::filter(col.accol., X..Eponges.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Eponges.BM.FI.post"]))), main = "X..Eponges", xlab = "data corrected") 
 
 sort(df.BM.FI[, "X..Ascidies.Coloniales"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.$X..Ascidies.Coloniales.BM.FI.pre. <- df.BM.FI[, "X..Ascidies.Coloniales"]
 acco.fct("X..Ascidies.Coloniales")
-col.accol. <- rename(col.accol., X..Ascidies.Coloniales.BM.FI.post = var.cor.acco.)
+col.accol. <- dplyr::rename(col.accol., X..Ascidies.Coloniales.BM.FI.post = var.cor.acco.)
 sort(col.accol.[, "X..Ascidies.Coloniales.BM.FI.post"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.[, "X..Ascidies.Coloniales.diff."] <- col.accol.[, "X..Ascidies.Coloniales.BM.FI.post"]/col.accol.[, "X..Ascidies.Coloniales.BM.FI.pre."]*100-100
 col.accol.[, "X..Ascidies.Coloniales.diff."] <- ifelse(is.nan(col.accol.[, "X..Ascidies.Coloniales.diff."]), NA, col.accol.[, "X..Ascidies.Coloniales.diff."])
@@ -1709,15 +1623,15 @@ hist(col.accol.$X..Ascidies.Coloniales.BM.FI.pre., main = "X..Ascidies.Coloniale
 hist(col.accol.[, "X..Ascidies.Coloniales.BM.FI.post"], main = "X..Ascidies.Coloniales", xlab = "post-corection")
 hist(df.BM.FI[as.vector(which(abs(col.accol.$X..Ascidies.Coloniales.BM.FI.pre. - col.accol.[, "X..Ascidies.Coloniales.BM.FI.post"]) != 0)), "X..Ascidies.Coloniales"], main = "X..Ascidies.Coloniales", xlab = "diff. post-pre != 0")
 par(mfrow=c(1,1))
-check <- arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Ascidies.Coloniales.BM.FI.pre.", "X..Ascidies.Coloniales.BM.FI.post", "X..Ascidies.Coloniales.diff.")], desc(X..Ascidies.Coloniales.BM.FI.post))
-nrow(filter(col.accol., X..Ascidies.Coloniales.diff. > 0))/nrow(col.accol.)*100
+check <- dplyr::arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Ascidies.Coloniales.BM.FI.pre.", "X..Ascidies.Coloniales.BM.FI.post", "X..Ascidies.Coloniales.diff.")], desc(X..Ascidies.Coloniales.BM.FI.post))
+nrow(dplyr::filter(col.accol., X..Ascidies.Coloniales.diff. > 0))/nrow(col.accol.)*100
 par(mfrow=c(1,2))
-hist(as.vector(unlist(filter(col.accol., X..Ascidies.Coloniales.diff. > 0)["X..Ascidies.Coloniales.diff."])), breaks = 100, main = "X..Ascidies.Coloniales", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(filter(col.accol., X..Ascidies.Coloniales.diff. > 0)["X..Ascidies.Coloniales.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(filter(col.accol., X..Ascidies.Coloniales.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Coloniales.BM.FI.post"]) <= 100, 100, max(filter(col.accol., X..Ascidies.Coloniales.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Coloniales.BM.FI.post"]))), main = "X..Ascidies.Coloniales", xlab = "data corrected") 
+hist(as.vector(unlist(dplyr::filter(col.accol., X..Ascidies.Coloniales.diff. > 0)["X..Ascidies.Coloniales.diff."])), breaks = 100, main = "X..Ascidies.Coloniales", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(dplyr::filter(col.accol., X..Ascidies.Coloniales.diff. > 0)["X..Ascidies.Coloniales.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(dplyr::filter(col.accol., X..Ascidies.Coloniales.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Coloniales.BM.FI.post"]) <= 100, 100, max(dplyr::filter(col.accol., X..Ascidies.Coloniales.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Coloniales.BM.FI.post"]))), main = "X..Ascidies.Coloniales", xlab = "data corrected") 
 
 sort(df.BM.FI[, "X..Ascidies.Solitaires"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.$X..Ascidies.Solitaires.BM.FI.pre. <- df.BM.FI[, "X..Ascidies.Solitaires"]
 acco.fct("X..Ascidies.Solitaires")
-col.accol. <- rename(col.accol., X..Ascidies.Solitaires.BM.FI.post = var.cor.acco.)
+col.accol. <- dplyr::rename(col.accol., X..Ascidies.Solitaires.BM.FI.post = var.cor.acco.)
 sort(col.accol.[, "X..Ascidies.Solitaires.BM.FI.post"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.[, "X..Ascidies.Solitaires.diff."] <- col.accol.[, "X..Ascidies.Solitaires.BM.FI.post"]/col.accol.[, "X..Ascidies.Solitaires.BM.FI.pre."]*100-100
 col.accol.[, "X..Ascidies.Solitaires.diff."] <- ifelse(is.nan(col.accol.[, "X..Ascidies.Solitaires.diff."]), NA, col.accol.[, "X..Ascidies.Solitaires.diff."])
@@ -1726,15 +1640,15 @@ hist(col.accol.$X..Ascidies.Solitaires.BM.FI.pre., main = "X..Ascidies.Solitaire
 hist(col.accol.[, "X..Ascidies.Solitaires.BM.FI.post"], main = "X..Ascidies.Solitaires", xlab = "post-corection")
 hist(df.BM.FI[as.vector(which(abs(col.accol.$X..Ascidies.Solitaires.BM.FI.pre. - col.accol.[, "X..Ascidies.Solitaires.BM.FI.post"]) != 0)), "X..Ascidies.Solitaires"], main = "X..Ascidies.Solitaires", xlab = "diff. post-pre != 0")
 par(mfrow=c(1,1))
-check <- arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Ascidies.Solitaires.BM.FI.pre.", "X..Ascidies.Solitaires.BM.FI.post", "X..Ascidies.Solitaires.diff.")], desc(X..Ascidies.Solitaires.BM.FI.post))
-nrow(filter(col.accol., X..Ascidies.Solitaires.diff. > 0))/nrow(col.accol.)*100
+check <- dplyr::arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Ascidies.Solitaires.BM.FI.pre.", "X..Ascidies.Solitaires.BM.FI.post", "X..Ascidies.Solitaires.diff.")], desc(X..Ascidies.Solitaires.BM.FI.post))
+nrow(dplyr::filter(col.accol., X..Ascidies.Solitaires.diff. > 0))/nrow(col.accol.)*100
 par(mfrow=c(1,2))
-hist(as.vector(unlist(filter(col.accol., X..Ascidies.Solitaires.diff. > 0)["X..Ascidies.Solitaires.diff."])), breaks = 100, main = "X..Ascidies.Solitaires", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(filter(col.accol., X..Ascidies.Solitaires.diff. > 0)["X..Ascidies.Solitaires.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(filter(col.accol., X..Ascidies.Solitaires.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Solitaires.BM.FI.post"]) <= 100, 100, max(filter(col.accol., X..Ascidies.Solitaires.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Solitaires.BM.FI.post"]))), main = "X..Ascidies.Solitaires", xlab = "data corrected") 
+hist(as.vector(unlist(dplyr::filter(col.accol., X..Ascidies.Solitaires.diff. > 0)["X..Ascidies.Solitaires.diff."])), breaks = 100, main = "X..Ascidies.Solitaires", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(dplyr::filter(col.accol., X..Ascidies.Solitaires.diff. > 0)["X..Ascidies.Solitaires.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(dplyr::filter(col.accol., X..Ascidies.Solitaires.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Solitaires.BM.FI.post"]) <= 100, 100, max(dplyr::filter(col.accol., X..Ascidies.Solitaires.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Ascidies.Solitaires.BM.FI.post"]))), main = "X..Ascidies.Solitaires", xlab = "data corrected") 
 
 sort(df.BM.FI[, "X..Bryozoaires.Dresses"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.$X..Bryozoaires.Dresses.BM.FI.pre. <- df.BM.FI[, "X..Bryozoaires.Dresses"]
 acco.fct("X..Bryozoaires.Dresses")
-col.accol. <- rename(col.accol., X..Bryozoaires.Dresses.BM.FI.post = var.cor.acco.)
+col.accol. <- dplyr::rename(col.accol., X..Bryozoaires.Dresses.BM.FI.post = var.cor.acco.)
 sort(col.accol.[, "X..Bryozoaires.Dresses.BM.FI.post"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.[, "X..Bryozoaires.Dresses.diff."] <- col.accol.[, "X..Bryozoaires.Dresses.BM.FI.post"]/col.accol.[, "X..Bryozoaires.Dresses.BM.FI.pre."]*100-100
 col.accol.[, "X..Bryozoaires.Dresses.diff."] <- ifelse(is.nan(col.accol.[, "X..Bryozoaires.Dresses.diff."]), NA, col.accol.[, "X..Bryozoaires.Dresses.diff."])
@@ -1743,15 +1657,15 @@ hist(col.accol.$X..Bryozoaires.Dresses.BM.FI.pre., main = "X..Bryozoaires.Dresse
 hist(col.accol.[, "X..Bryozoaires.Dresses.BM.FI.post"], main = "X..Bryozoaires.Dresses", xlab = "post-corection")
 hist(df.BM.FI[as.vector(which(abs(col.accol.$X..Bryozoaires.Dresses.BM.FI.pre. - col.accol.[, "X..Bryozoaires.Dresses.BM.FI.post"]) != 0)), "X..Bryozoaires.Dresses"], main = "X..Bryozoaires.Dresses", xlab = "diff. post-pre != 0")
 par(mfrow=c(1,1))
-check <- arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Bryozoaires.Dresses.BM.FI.pre.", "X..Bryozoaires.Dresses.BM.FI.post", "X..Bryozoaires.Dresses.diff.")], desc(X..Bryozoaires.Dresses.BM.FI.post))
-nrow(filter(col.accol., X..Bryozoaires.Dresses.diff. > 0))/nrow(col.accol.)*100
+check <- dplyr::arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Bryozoaires.Dresses.BM.FI.pre.", "X..Bryozoaires.Dresses.BM.FI.post", "X..Bryozoaires.Dresses.diff.")], desc(X..Bryozoaires.Dresses.BM.FI.post))
+nrow(dplyr::filter(col.accol., X..Bryozoaires.Dresses.diff. > 0))/nrow(col.accol.)*100
 par(mfrow=c(1,2))
-hist(as.vector(unlist(filter(col.accol., X..Bryozoaires.Dresses.diff. > 0)["X..Bryozoaires.Dresses.diff."])), breaks = 100, main = "X..Bryozoaires.Dresses", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(filter(col.accol., X..Bryozoaires.Dresses.diff. > 0)["X..Bryozoaires.Dresses.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(filter(col.accol., X..Bryozoaires.Dresses.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Bryozoaires.Dresses.BM.FI.post"]) <= 100, 100, max(filter(col.accol., X..Bryozoaires.Dresses.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Bryozoaires.Dresses.BM.FI.post"]))), main = "X..Bryozoaires.Dresses", xlab = "data corrected") 
+hist(as.vector(unlist(dplyr::filter(col.accol., X..Bryozoaires.Dresses.diff. > 0)["X..Bryozoaires.Dresses.diff."])), breaks = 100, main = "X..Bryozoaires.Dresses", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(dplyr::filter(col.accol., X..Bryozoaires.Dresses.diff. > 0)["X..Bryozoaires.Dresses.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(dplyr::filter(col.accol., X..Bryozoaires.Dresses.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Bryozoaires.Dresses.BM.FI.post"]) <= 100, 100, max(dplyr::filter(col.accol., X..Bryozoaires.Dresses.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Bryozoaires.Dresses.BM.FI.post"]))), main = "X..Bryozoaires.Dresses", xlab = "data corrected") 
 
 sort(df.BM.FI[, "X..Lithophyllum"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.$X..Lithophyllum.BM.FI.pre. <- df.BM.FI[, "X..Lithophyllum"]
 acco.fct("X..Lithophyllum")
-col.accol. <- rename(col.accol., X..Lithophyllum.BM.FI.post = var.cor.acco.)
+col.accol. <- dplyr::rename(col.accol., X..Lithophyllum.BM.FI.post = var.cor.acco.)
 sort(col.accol.[, "X..Lithophyllum.BM.FI.post"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.[, "X..Lithophyllum.diff."] <- col.accol.[, "X..Lithophyllum.BM.FI.post"]/col.accol.[, "X..Lithophyllum.BM.FI.pre."]*100-100
 col.accol.[, "X..Lithophyllum.diff."] <- ifelse(is.nan(col.accol.[, "X..Lithophyllum.diff."]), NA, col.accol.[, "X..Lithophyllum.diff."])
@@ -1760,15 +1674,15 @@ hist(col.accol.$X..Lithophyllum.BM.FI.pre., main = "X..Lithophyllum", xlab = "pr
 hist(col.accol.[, "X..Lithophyllum.BM.FI.post"], main = "X..Lithophyllum", xlab = "post-corection")
 hist(df.BM.FI[as.vector(which(abs(col.accol.$X..Lithophyllum.BM.FI.pre. - col.accol.[, "X..Lithophyllum.BM.FI.post"]) != 0)), "X..Lithophyllum"], main = "X..Lithophyllum", xlab = "diff. post-pre != 0")
 par(mfrow=c(1,1))
-check <- arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Lithophyllum.BM.FI.pre.", "X..Lithophyllum.BM.FI.post", "X..Lithophyllum.diff.")], desc(X..Lithophyllum.BM.FI.post))
-nrow(filter(col.accol., X..Lithophyllum.diff. > 0))/nrow(col.accol.)*100
+check <- dplyr::arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Lithophyllum.BM.FI.pre.", "X..Lithophyllum.BM.FI.post", "X..Lithophyllum.diff.")], desc(X..Lithophyllum.BM.FI.post))
+nrow(dplyr::filter(col.accol., X..Lithophyllum.diff. > 0))/nrow(col.accol.)*100
 par(mfrow=c(1,2))
-hist(as.vector(unlist(filter(col.accol., X..Lithophyllum.diff. > 0)["X..Lithophyllum.diff."])), breaks = 100, main = "X..Lithophyllum", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(filter(col.accol., X..Lithophyllum.diff. > 0)["X..Lithophyllum.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(filter(col.accol., X..Lithophyllum.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Lithophyllum.BM.FI.post"]) <= 100, 100, max(filter(col.accol., X..Lithophyllum.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Lithophyllum.BM.FI.post"]))), main = "X..Lithophyllum", xlab = "data corrected") 
+hist(as.vector(unlist(dplyr::filter(col.accol., X..Lithophyllum.diff. > 0)["X..Lithophyllum.diff."])), breaks = 100, main = "X..Lithophyllum", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(dplyr::filter(col.accol., X..Lithophyllum.diff. > 0)["X..Lithophyllum.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(dplyr::filter(col.accol., X..Lithophyllum.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Lithophyllum.BM.FI.post"]) <= 100, 100, max(dplyr::filter(col.accol., X..Lithophyllum.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Lithophyllum.BM.FI.post"]))), main = "X..Lithophyllum", xlab = "data corrected") 
 
 sort(df.BM.FI[, "X..Balanes.Vivantes"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.$X..Balanes.Vivantes.BM.FI.pre. <- df.BM.FI[, "X..Balanes.Vivantes"]
 acco.fct("X..Balanes.Vivantes")
-col.accol. <- rename(col.accol., X..Balanes.Vivantes.BM.FI.post = var.cor.acco.)
+col.accol. <- dplyr::rename(col.accol., X..Balanes.Vivantes.BM.FI.post = var.cor.acco.)
 sort(col.accol.[, "X..Balanes.Vivantes.BM.FI.post"], decreasing = TRUE, index.return = FALSE)[1:50]
 col.accol.[, "X..Balanes.Vivantes.diff."] <- col.accol.[, "X..Balanes.Vivantes.BM.FI.post"]/col.accol.[, "X..Balanes.Vivantes.BM.FI.pre."]*100-100
 col.accol.[, "X..Balanes.Vivantes.diff."] <- ifelse(is.nan(col.accol.[, "X..Balanes.Vivantes.diff."]), NA, col.accol.[, "X..Balanes.Vivantes.diff."])
@@ -1777,10 +1691,10 @@ hist(col.accol.$X..Balanes.Vivantes.BM.FI.pre., main = "X..Balanes.Vivantes", xl
 hist(col.accol.[, "X..Balanes.Vivantes.BM.FI.post"], main = "X..Balanes.Vivantes", xlab = "post-corection")
 hist(df.BM.FI[as.vector(which(abs(col.accol.$X..Balanes.Vivantes.BM.FI.pre. - col.accol.[, "X..Balanes.Vivantes.BM.FI.post"]) != 0)), "X..Balanes.Vivantes"], main = "X..Balanes.Vivantes", xlab = "diff. post-pre != 0")
 par(mfrow=c(1,1))
-check <- arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Balanes.Vivantes.BM.FI.pre.", "X..Balanes.Vivantes.BM.FI.post", "X..Balanes.Vivantes.diff.")], desc(X..Balanes.Vivantes.BM.FI.post))
-nrow(filter(col.accol., X..Balanes.Vivantes.diff. > 0))/nrow(col.accol.)*100
+check <- dplyr::arrange(col.accol.[, c("Site", "Site.Year.Month.Day", "Accol.", "Mytilus.BM.FS", "Col.domi.BM.FS", "Col.domi.BM.FI", "X..Balanes.Vivantes.BM.FI.pre.", "X..Balanes.Vivantes.BM.FI.post", "X..Balanes.Vivantes.diff.")], desc(X..Balanes.Vivantes.BM.FI.post))
+nrow(dplyr::filter(col.accol., X..Balanes.Vivantes.diff. > 0))/nrow(col.accol.)*100
 par(mfrow=c(1,2))
-hist(as.vector(unlist(filter(col.accol., X..Balanes.Vivantes.diff. > 0)["X..Balanes.Vivantes.diff."])), breaks = 100, main = "X..Balanes.Vivantes", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(filter(col.accol., X..Balanes.Vivantes.diff. > 0)["X..Balanes.Vivantes.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(filter(col.accol., X..Balanes.Vivantes.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Balanes.Vivantes.BM.FI.post"]) <= 100, 100, max(filter(col.accol., X..Balanes.Vivantes.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Balanes.Vivantes.BM.FI.post"]))), main = "X..Balanes.Vivantes", xlab = "data corrected") 
+hist(as.vector(unlist(dplyr::filter(col.accol., X..Balanes.Vivantes.diff. > 0)["X..Balanes.Vivantes.diff."])), breaks = 100, main = "X..Balanes.Vivantes", xlab = "diff. post-pre != 0 (%)") ; hist(as.vector(unlist(dplyr::filter(col.accol., X..Balanes.Vivantes.diff. > 0)["X..Balanes.Vivantes.BM.FI.post"])), breaks = 100, xlim = c(0,ifelse(max(dplyr::filter(col.accol., X..Balanes.Vivantes.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Balanes.Vivantes.BM.FI.post"]) <= 100, 100, max(dplyr::filter(col.accol., X..Balanes.Vivantes.BM.FI.post %notin% c(NA, "NaN", "-Inf", "Inf"))["X..Balanes.Vivantes.BM.FI.post"]))), main = "X..Balanes.Vivantes", xlab = "data corrected") 
 
 options(scipen = 0, digits = 7) # default
 
@@ -1800,7 +1714,7 @@ qecb.val.list <- vector("list", length(unique(qecbNew$Site.Year.Month.Day)))
 
 # check for missing/NA data? 
 qecbNew[, c("X..algues.brunes", "X..algues.rouges", "X..Cladophora", "X..Lithophyllum", "Nb.Littorina.obtusata", "Nb.Gibbula.cineraria", "Nb.Gibbula.pennanti", "Nb.Gibbula.umbilicalis", "X..Eponges", "X..Ascidies.Coloniales", "X..Ascidies.Solitaires", "X..Bryozoaires.Dresses", "X..algues.vertes", "X..Roche.Nue", "Nb.spirorbis.total", "X..Balanes.Vivantes", "Nb.Spirobranchus.lamarckii.total", "X..Surface.Accolement")] -> check.
-check. %>% filter_all(any_vars(is.na(.))) -> check.
+check. %>% dplyr::filter_all(any_vars(is.na(.))) -> check.
 names(check.[colSums(!is.na(check.)) == 0]) # they might be NAs to change to 0 for some face inférieure blocs mobiles in qecb formula; added at the appropriate place in below function.
 check.[, names(check.[colSums(!is.na(check.)) == 0])]  
 names(check.[colSums(is.na(check.)) != 0]) 
@@ -1809,8 +1723,8 @@ rm(check.)
 
 unique(qecbNew$Site)
 # Issues with Île de Sein data, so investigate this subdataset first
-filter(qecbNew, Site %in% c("EGMP_GroinCou")) -> issue.
-arrange(issue., Site, Date.fiche, Type.Bloc, Numéro.Bloc.échantillon, Face, Quadrat.bis) -> issue.
+dplyr::filter(qecbNew, Site %in% c("EGMP_GroinCou")) -> issue.
+dplyr::arrange(issue., Site, date_fiche, Type.Bloc, Numéro.Bloc.échantillon, Face, Quadrat.bis) -> issue.
 rm(issue.)
 
 unique(qecbNew$Site.Year.Month.Day)
@@ -1818,13 +1732,13 @@ unique(qecbNew$Site.Year.Month.Day)
 #some more sites to remove, but that could be solved later on so always check the loop below before deleting them; therefore, I unactivated these lines and I have to run them manually by selecting them. It is obviously the only site with that issue.
 
 # "FINS_Quemenes.2020.10.16", bad encoding, I let know Anna Capietto to make changes => was corrected normally, so unactivate next time I download ESTAMP data
-filter(qecbNew, Site.Year.Month.Day != "FINS_Quemenes.2020.10.16") -> qecbNew
+dplyr::filter(qecbNew, Site.Year.Month.Day != "FINS_Quemenes.2020.10.16") -> qecbNew
 
 # already changed earlier in the script
 #qecbNew$Type.Bloc <- as.character(qecbNew$Type.Bloc)
 #qecbNew$Type.Bloc <- ifelse(qecbNew$ID.Fiche == "2018-09-10-GDMO-CDB-001" & qecbNew$Numero.Photo == "2018-09-10_GDMO_01_CDB-5_sup_392578.jpg", "Roche en place", qecbNew$Type.Bloc)
 #qecbNew$Type.Bloc <- as.factor(qecbNew$Type.Bloc)
-#qecbNew %>% filter(!(ID.Fiche == "2018-09-10-GDMO-CDB-001" & Numero.Photo == "")) -> qecbNew
+#qecbNew %>% dplyr::filter(!(ID.Fiche == "2018-09-10-GDMO-CDB-001" & Numero.Photo == "")) -> qecbNew
 
 saveRDS(qecbNew, "results/QECB/qecbNew.RDS")
 qecbNew <- readRDS("results/QECB/qecbNew.RDS")
@@ -1842,20 +1756,20 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
   #i <- 19
   #i <- 28
   
-  qecbNew  %>% filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
+  qecbNew  %>% dplyr::filter(Site.Year.Month.Day == unique(qecbNew$Site.Year.Month.Day)[[i]]) -> qecb.i
   
   (terri. <- unique(substr(qecb.i$Site, 1, 4)))
   
-  # we do not filter for specific boulder after validation process; we keep them all (although it might add some noise)
+  # we do not dplyr::filter for specific boulder after validation process; we keep them all (although it might add some noise)
   #val.VrFS.BM.moy[[i]] -> val.VrFS.BM.moy.i
   #val.QECB[[i]] -> val.QECB.i
   
-  nb. <- as.vector(unlist(intersect(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"], filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])))
+  nb. <- as.vector(unlist(intersect(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"], dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])))
   
   Bloc.nb <- c(
     paste0("Bloc mobile", " - ", "face supérieure", " - ", nb.), 
     paste0("Bloc mobile", " - ", "face inférieure", " - ", nb.),
-    paste0(as.vector(unlist(filter(qecb.i, Type.Bloc != "Bloc mobile")["Type.Bloc"])), " - ", as.vector(unlist(filter(qecb.i, Type.Bloc != "Bloc mobile")["Face"])), " - ", as.vector(unlist(filter(qecb.i, Type.Bloc != "Bloc mobile")["Numéro.Bloc.échantillon"]))) 
+    paste0(as.vector(unlist(dplyr::filter(qecb.i, Type.Bloc != "Bloc mobile")["Type.Bloc"])), " - ", as.vector(unlist(dplyr::filter(qecb.i, Type.Bloc != "Bloc mobile")["Face"])), " - ", as.vector(unlist(dplyr::filter(qecb.i, Type.Bloc != "Bloc mobile")["Numéro.Bloc.échantillon"]))) 
   )
   
   qecb.i$Bloc <- paste0(qecb.i$Type.Bloc, " - ", qecb.i$Face, " - ", qecb.i$Numéro.Bloc.échantillon)
@@ -1869,9 +1783,9 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VFS.BM Bloc mobile
     
-    qecb.i %>% filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.BM.FS # to keep a version of it for later on correction for accollement for BM FI
+    qecb.i %>% dplyr::filter(qecb.i$Type.Bloc == "Bloc mobile" & qecb.i$Face == "face supérieure") -> df.BM.FS # to keep a version of it for later on correction for accollement for BM FI
     df. <- df.BM.FS
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     A.bmS <- df.$X..algues.brunes + df.$X..algues.rouges + df.$X..Cladophora
     B.bmS <-  df.$X..Lithophyllum
@@ -1893,8 +1807,8 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VFI.BM Bloc mobile         
     
-    qecb.i %>% filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face inférieure") -> df.
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     df.BM.FI <- df.
     
@@ -1909,7 +1823,7 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
           df.BM.FS$Couleur.dominante %in% c("Blanche", "Verte", "Blanche-Verte", "Colorée") , df.BM.FI[, var.] / (100 - df.BM.FI$X..Surface.Accolement) * 100, df.BM.FI[, var.])
       } else {
         ifelse(df.BM.FS$Couleur.dominante %in% c("Blanche", "Verte", "Blanche-Verte", "Colorée") 
-               & df.BM.FI$X..Surface.Accolement != 0 # I have to use it in filter this time as well for EGMP- BASQ (but not for Bretagne, altough could be added, same result); identical/repeated measure for BM.FI and BM.FS
+               & df.BM.FI$X..Surface.Accolement != 0 # I have to use it in dplyr::filter this time as well for EGMP- BASQ (but not for Bretagne, altough could be added, same result); identical/repeated measure for BM.FI and BM.FS
                & df.BM.FS$X..Mytilus.sp. == 0, df.BM.FI[, var.] / (100 - df.BM.FI$X..Surface.Accolement) * 100, df.BM.FI[, var.])
       }
       
@@ -1989,24 +1903,24 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VFSI.BM Bloc mobile
     
-    qecb.i %>% filter(Type.Bloc == "Bloc mobile") -> df.
-    df. <- arrange(df., desc(Face), Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile") -> df.
+    df. <- dplyr::arrange(df., desc(Face), Numéro.Bloc.échantillon)
     num.bloc <- as.vector(sort(unique(df.$Numéro.Bloc.échantillon)))
     
     G.bmSI <- NA
     H.bmSI <- NA
     L.bmSI <- NA
     
-    df.BM.FS <- filter(df., Face == "face inférieure")
-    df.BM.FI <- filter(df., Face == "face inférieure") 
+    df.BM.FS <- dplyr::filter(df., Face == "face inférieure")
+    df.BM.FI <- dplyr::filter(df., Face == "face inférieure") 
     
     df.BM.FS$Couleur.dominante 
     df.BM.FS$X..Mytilus.sp.
     
     df.[, "X..Balanes.Vivantes"] ; df.[, "X..Surface.Accolement"]
     df. <- mutate(df., row.nb = row_number())
-    filter(df., Face == "face inférieure")["row.nb"]
-    df.[c(filter(df., Face == "face inférieure")[1, "row.nb"]:unlist(tail(filter(df., Face == "face inférieure"), n=1)["row.nb"])), "X..Balanes.Vivantes"] <- acco.fct("X..Balanes.Vivantes")
+    dplyr::filter(df., Face == "face inférieure")["row.nb"]
+    df.[c(dplyr::filter(df., Face == "face inférieure")[1, "row.nb"]:unlist(tail(dplyr::filter(df., Face == "face inférieure"), n=1)["row.nb"])), "X..Balanes.Vivantes"] <- acco.fct("X..Balanes.Vivantes")
     df.[, "X..Balanes.Vivantes"] <- as.numeric(ifelse(as.character(df.[, "X..Balanes.Vivantes"]) %in% c(NA, "NaN", "-Inf", "Inf"), "0", as.character(df.[, "X..Balanes.Vivantes"])))
     df.[, "X..Balanes.Vivantes"] <- ifelse(df.[, "X..Balanes.Vivantes"] > 100, 100, df.[, "X..Balanes.Vivantes"])
     df.[, "X..Balanes.Vivantes"]
@@ -2016,27 +1930,27 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
       j. <- num.bloc[k]
       
       GIn. <- unname(unlist(
-        (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
-         + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
+        (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
+         + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
         ) / 1000 ))
       
       G.bmSI <<- c(G.bmSI, GIn.)
       
       HIn. <- unname(unlist(  
-        (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-         + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"] 
+        (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
+         + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"] 
         ) / 100 ))
       
       #HIn. <- unname(unlist(  
-      #  (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-      #   + ( filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"] / (100 - filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Surface.Accolement"]) * 100 ) 
+      #  (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
+      #   + ( dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"] / (100 - dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Surface.Accolement"]) * 100 ) 
       #  ) / 100 ))
       
       H.bmSI <<- c(H.bmSI, HIn.)
       
       LIn. <- unname(unlist(    
-        (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
-         + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
+        (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
+         + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
         ) / 100 ))
       
       L.bmSI <<- c(L.bmSI, LIn.) # To avoid error message "Error in I <<- c(I, IIn.) : cannot change value of locked binding for 'I'"
@@ -2057,31 +1971,31 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
       j. <- num.bloc[k]
       
       VFSIn. <- unname(unlist(
-        ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
-           + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
+        ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
+           + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
         ) / 1000 )
         -
           ( 
-            ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-               + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
+            ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
+               + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"]
             ) / 100 )
-            + ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
-                 + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
+            + ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
+                 + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
             ) / 100 )
           )
       ))
       
       #VFSIn. <- unname(unlist(
-      #  ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
-      #     + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
+      #  ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.spirorbis.total"]
+      #     + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.spirorbis.total"]
       #  ) / 1000 )
       #  -
       #    ( 
-      #      ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
-      #         + ( filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"] / (100 - filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Surface.Accolement"]) * 100 )
+      #      ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["X..Balanes.Vivantes"]
+      #         + ( dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Balanes.Vivantes"] / (100 - dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["X..Surface.Accolement"]) * 100 )
       #      ) / 100 )
-      #      + ( (filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
-      #           + filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
+      #      + ( (dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face supérieure")["Nb.Spirobranchus.lamarckii.total"]
+      #           + dplyr::filter(df., Numéro.Bloc.échantillon == j. & Face == "face inférieure")["Nb.Spirobranchus.lamarckii.total"]
       #      ) / 100 )
       #    )
       #)) 
@@ -2105,8 +2019,8 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # VrFS.BF moyenne Bloc fixé ; = VDRmoyenne in excel file
     
-    qecb.i %>% filter(Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(Type.Bloc %in% c("Bloc fixé", "Roche en place")) -> df.
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     A.bf <- df.$X..algues.brunes + df.$X..algues.rouges + df.$X..Cladophora
     B.bf <- df.$X..Lithophyllum
@@ -2115,12 +2029,12 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     E.bf <- df.$X..algues.vertes
     F.bf <- df.$X..Roche.Nue
     
-    A.bf <- c(A.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(A.bf)))
-    B.bf <- c(B.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(B.bf)))
-    C.bf <- c(C.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(C.bf)))
-    D.bf <- c(D.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(D.bf)))
-    E.bf <- c(E.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(E.bf)))
-    F.bf <- c(F.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(F.bf)))
+    A.bf <- c(A.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(A.bf)))
+    B.bf <- c(B.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(B.bf)))
+    C.bf <- c(C.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(C.bf)))
+    D.bf <- c(D.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(D.bf)))
+    E.bf <- c(E.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(E.bf)))
+    F.bf <- c(F.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(F.bf)))
     
     (  (df.$X..algues.brunes + df.$X..algues.rouges + df.$X..Cladophora)
       +  df.$X..Lithophyllum
@@ -2131,7 +2045,7 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
           +  df.$X..Roche.Nue
       ) -> VrFS.BF # different from Pauline, check with her
     VrFS.BF
-    VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(VrFS.BF)))
+    VrFS.BF <- c(VrFS.BF, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(VrFS.BF)))
     
     
     # (G-(H+I)) Bloc fixé & Roche en place
@@ -2140,15 +2054,15 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     H.bf <- df.$X..Balanes.Vivantes/100
     I.bf <- df.$Nb.Spirobranchus.lamarckii.total/100
     
-    G.bf<- c(G.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(G.bf)))
-    H.bf<- c(H.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(H.bf)))
-    I.bf<- c(I.bf, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(I.bf)))
+    G.bf<- c(G.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(G.bf)))
+    H.bf<- c(H.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(H.bf)))
+    I.bf<- c(I.bf, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(I.bf)))
     
     ( df.$Nb.spirorbis.total/1000
       - (df.$X..Balanes.Vivantes/100 + df.$Nb.Spirobranchus.lamarckii.total/100)
     ) -> `(G-(H+I))BF`
     `(G-(H+I))BF`
-    `(G-(H+I))BF` <- c(`(G-(H+I))BF`, rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(`(G-(H+I))BF`)))
+    `(G-(H+I))BF` <- c(`(G-(H+I))BF`, rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(`(G-(H+I))BF`)))
     
     
     # VrFS.BF.moy
@@ -2158,8 +2072,8 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
     
     # (G-(H+I)S.BM) Bloc mobile face supérieure
     
-    qecb.i %>% filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
-    df. <- arrange(df., Numéro.Bloc.échantillon)
+    qecb.i %>% dplyr::filter(Type.Bloc == "Bloc mobile" & Face == "face supérieure") -> df.
+    df. <- dplyr::arrange(df., Numéro.Bloc.échantillon)
     
     G.bmS <- df.$Nb.spirorbis.total/1000
     H.bmS <- df.$X..Balanes.Vivantes/100 
@@ -2203,14 +2117,14 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
   
   qecb.val.qu.list[[i]] <- data.frame(id_qecb = rep(unique(qecb.i$id_qecb), length(QEBM.2)),
     Site = rep(unique(qecb.i$Site), length(QEBM.2)), 
-    Site.bis = rep(unique(qecb.i$Site.bis), length(QEBM.2)),     
+    Site_bis = rep(unique(qecb.i$Site_bis), length(QEBM.2)),     
     Site.Year.Month.Day = rep(unique(qecb.i$Site.Year.Month.Day), length(QEBM.2)),
-    Boulder.nb.bmS = sort(unique(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]),
-    Boulder.nb.bmI = sort(unique(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])[,1]),
-    Boulder.nb.bf = c(sort(unique(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]), rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]) - length(unique(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]))),
-    Quadrat.bmS = sort(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Quadrat.bis"][,1]),
-    Quadrat.bmI = sort(filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Quadrat.bis"][,1]),
-    Quadrat.bf = c(sort(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]), rep(NA, length(unique(filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]))),
+    Boulder.nb.bmS = sort(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]),
+    Boulder.nb.bmI = sort(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Numéro.Bloc.échantillon"])[,1]),
+    Boulder.nb.bf = c(sort(unique(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]), rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Numéro.Bloc.échantillon"])[,1]) - length(unique(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Numéro.Bloc.échantillon"])[,1]))),
+    Quadrat.bmS = sort(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face supérieure")["Quadrat.bis"][,1]),
+    Quadrat.bmI = sort(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile" & Face == "face inférieure")["Quadrat.bis"][,1]),
+    Quadrat.bf = c(sort(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]), rep(NA, length(unique(dplyr::filter(qecb.i, Type.Bloc == "Bloc mobile")["Numéro.Bloc.échantillon"])[,1]) - length(dplyr::filter(qecb.i, Type.Bloc %in% c("Bloc fixé", "Roche en place"))["Quadrat.bis"][,1]))),
     A.bmS,
     B.bmS,
     C.bmS,
@@ -2250,7 +2164,7 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
   
   qecb.val.list[[i]] <- data.frame(id_qecb = unique(qecb.i$id_qecb), 
     Site = unique(qecb.i$Site), 
-    Site.bis = unique(qecb.i$Site.bis),     
+    Site_bis = unique(qecb.i$Site_bis),     
     Site.Year.Month.Day = unique(qecb.i$Site.Year.Month.Day),                 
     VrFS.BM.moy,
     VrFS.BF.moy,
@@ -2268,14 +2182,14 @@ for (i in c(1:length(unique(qecbNew$Site.Year.Month.Day)))) {
 #rs(filename = "R & reports/QECB/CB_qecb.r", from = 993, to = 1287)
 
 qecb.val.qu. <- do.call("rbind", qecb.val.qu.list)
-qecb.val.qu. <- arrange(qecb.val.qu., Site.Year.Month.Day, Boulder.nb.bmS)
+qecb.val.qu. <- dplyr::arrange(qecb.val.qu., Site.Year.Month.Day, Boulder.nb.bmS)
 unique(qecb.val.qu.$Site.Year.Month.Day)
 #library(stringr)
 #Site <- str_sub(qecb.val.qu.$Site.Year.Month.Day,end = -12)
 #library(tibble)
-#qecb.val.qu. <- add_column(qecb.val.qu., Site, .after = "Site.Year.Month.Day")
+#qecb.val.qu. <- tibble::add_column(qecb.val.qu., Site, .after = "Site.Year.Month.Day")
 Date <- as.Date(str_sub(qecb.val.qu.$Site.Year.Month.Day,-10,-1), format = "%Y.%m.%d", origin = "1970-01-01")
-qecb.val.qu. <- add_column(qecb.val.qu., Date, .after = "Site.bis")
+qecb.val.qu. <- tibble::add_column(qecb.val.qu., Date, .after = "Site_bis")
 rm(#Site,
   Date)
 
@@ -2319,7 +2233,7 @@ QEBM.2.list <- vector("list", length(unique(qecb.val.qu.$Site.Year.Month.Day)))
 
 for (i in c(1:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
 
-qecb.val.qu. %>% filter(Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[[i]]) -> QEBM.2.i
+qecb.val.qu. %>% dplyr::filter(Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[[i]]) -> QEBM.2.i
   
   QEBM.2.i$QEBM.1 * 
   abs(
@@ -2371,11 +2285,11 @@ qecb.val.qu.[,ncol(qecb.val.qu.)+1] <- do.call("rbind", QEBM.2.list)[2]
 
 
 qecb.val. <- do.call("rbind", qecb.val.list)
-qecb.val. <- arrange(qecb.val., Site.Year.Month.Day)
+qecb.val. <- dplyr::arrange(qecb.val., Site.Year.Month.Day)
 #Site <- str_sub(qecb.val.$Site.Year.Month.Day,end = -12)
-#qecb.val. <- add_column(qecb.val., Site, .after = "Site.Year.Month.Day")
+#qecb.val. <- tibble::add_column(qecb.val., Site, .after = "Site.Year.Month.Day")
 Date <- as.Date(str_sub(qecb.val.$Site.Year.Month.Day,-10,-1), format = "%Y.%m.%d", origin = "1970-01-01")
-qecb.val. <- add_column(qecb.val., Date, .after = "Site.bis")
+qecb.val. <- tibble::add_column(qecb.val., Date, .after = "Site_bis")
 rm(#Site, 
    Date)
 
@@ -2389,16 +2303,16 @@ qecb.val.qu.$Mois <- as.integer(qecb.val.qu.$Mois)
 qecb.val.qu.$Jour <- as.integer(qecb.val.qu.$Jour)
 
 
-#filter(qecb.val.qu., is.nan(QEBM.2))
-#filter(qecb.val.qu., !is.nan(QEBM.2)) -> qecb.val.qu.NaN
-filter(qecb.val.qu., QEBM.2 %in% c("Inf", "NaN"))
+#dplyr::filter(qecb.val.qu., is.nan(QEBM.2))
+#dplyr::filter(qecb.val.qu., !is.nan(QEBM.2)) -> qecb.val.qu.NaN
+dplyr::filter(qecb.val.qu., QEBM.2 %in% c("Inf", "NaN"))
 qecb.val.qu.NaN <- qecb.val.qu.
 qecb.val.qu.NaN$QEBM.2 <- ifelse(qecb.val.qu.NaN$QEBM.2 %in% c("-Inf", "NaN"), NA, qecb.val.qu.NaN$QEBM.2)
 
-qecb.val.qu.NaN %>% group_by(id_qecb, Site, Site.bis, Annee, Mois, Jour) %>% summarize(qecb.moy = mean(QEBM.2, na.rm = T), qecb.et = sd(QEBM.2, na.rm = T), qecb.med = median(QEBM.2, na.rm = T), qecb.min = min(QEBM.2, na.rm = T), qecb.max = max(QEBM.2, na.rm = T), nb. = n(), nb.notNa = sum(!is.na(QEBM.2))) -> qecb.val.qu.stat.
+qecb.val.qu.NaN %>% dplyr::group_by(id_qecb, Site, Site_bis, Annee, Mois, Jour) %>% summarize(qecb.moy = mean(QEBM.2, na.rm = T), qecb.et = sd(QEBM.2, na.rm = T), qecb.med = median(QEBM.2, na.rm = T), qecb.min = min(QEBM.2, na.rm = T), qecb.max = max(QEBM.2, na.rm = T), nb. = n(), nb.notNa = sum(!is.na(QEBM.2))) -> qecb.val.qu.stat.
 
 Date <- as.Date(paste0(qecb.val.qu.stat.$Annee, "-", qecb.val.qu.stat.$Mois, "-", qecb.val.qu.stat.$Jour), origin = "1970-01-01")
-qecb.val.qu.stat. <- add_column(qecb.val.qu.stat., Date, .after = "Site.bis")
+qecb.val.qu.stat. <- tibble::add_column(qecb.val.qu.stat., Date, .after = "Site_bis")
 rm(Date)
 
 qecb.val.qu.stat. <- as.data.frame(qecb.val.qu.stat.)
@@ -2412,7 +2326,7 @@ Survey.list <- vector("list", length(unique(qecb.val.qu.$Site.Year.Month.Day)))
 
 for (i in c(1:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
   
-  qecb.val.qu.  %>% filter(Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[[i]]) -> qecb.i
+  qecb.val.qu.  %>% dplyr::filter(Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[[i]]) -> qecb.i
   
   Survey.list[[i]] <- data.frame(
     Site.Year.Month.Day = rep(unique(qecb.i$Site.Year.Month.Day), nrow(qecb.i)), 
@@ -2424,12 +2338,12 @@ for (i in c(1:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
 Survey <- do.call("rbind", Survey.list)
  
 setdiff(qecb.val.qu.$Site.Year.Month.Day, Survey$Site.Year.Month.Day)
-qecb.val.qu. <- add_column(qecb.val.qu., Survey.nb = Survey$Survey.nb, .after = "Site.Year.Month.Day")
+qecb.val.qu. <- tibble::add_column(qecb.val.qu., Survey.nb = Survey$Survey.nb, .after = "Site.Year.Month.Day")
 
 rm(i, Survey.list, Survey, qecb.i) 
 
 Survey.nb <- c(1:nrow(qecb.val.))
-qecb.val. <- add_column(qecb.val., Survey.nb, .after = "Site.Year.Month.Day")
+qecb.val. <- tibble::add_column(qecb.val., Survey.nb, .after = "Site.Year.Month.Day")
 
 rm(Survey.nb)  
 
@@ -2454,7 +2368,7 @@ for (i in c(1:100)) {
   #i <- 75
   
   library(dplyr)
-  filter(qecb.val.qu., Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[i]) -> df.  
+  dplyr::filter(qecb.val.qu., Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[i]) -> df.  
   
   max.bm = length(na.omit(c(df.$Boulder.nb.bmS, df.$Boulder.nb.bmI)))/2
   max.bf = length(na.omit(df.$Boulder.nb.bf))
@@ -2479,7 +2393,7 @@ for (i in c(1:100)) {
   # For blocs mobiles/fixes, only use variable Boulder.nb.bmS; does refer here to a bloc, but not to its particular nb (globally for blocs fixé / Roche en place)
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VFS.BM, xlab = "", ylab = "VFS.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VFS.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VFS.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VFS.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   mtext("Bloc mobile /  ", side = 1, line = 3, cex = 0.7)
@@ -2488,28 +2402,28 @@ for (i in c(1:100)) {
   with(df., plot(Boulder.nb.bmS, VrFS.BF, axes = FALSE, xlab = NA, ylab = NA, yaxt = "n", cex = 0))
   axis(side = 4)
   mtext("VrFS.BF", side = 4, line = 3, col = "blue", cex = 0.7)
-  bk. <- filter(df., VrFS.BF != 0.000000002)
+  bk. <- dplyr::filter(df., VrFS.BF != 0.000000002)
   points(bk.$Boulder.nb.bmS, bk.$VrFS.BF, col = "blue")
-  bk.red <- filter(df., VrFS.BF == 0.000000001)
+  bk.red <- dplyr::filter(df., VrFS.BF == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VrFS.BF, col = "red")
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VFI.BM, xlab = "Bloc mobile", ylab = "VFI.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VFI.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VFI.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VFI.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VFSI.BM, xlab = "Bloc mobile", ylab = "VFSI.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VFSI.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VFSI.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VFSI.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$QEBM.1, xlab = "Bloc mobile", ylab = "QEBM.1", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., QEBM.1 == 0.000000001)
+  bk.red <- dplyr::filter(df., QEBM.1 == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$QEBM.1, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$X.G..H.I..S.BM, xlab = "", ylab = "X.G..H.I..S.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., X.G..H.I..S.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., X.G..H.I..S.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$X.G..H.I..S.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   mtext("Bloc mobile /  ", side = 1, line = 3, cex = 0.7)
@@ -2518,21 +2432,21 @@ for (i in c(1:100)) {
   with(df., plot(Boulder.nb.bmS, X.G..H.I..BF, axes = FALSE, xlab = NA, ylab = NA, yaxt = "n", cex = 0))
   axis(side = 4)
   mtext("X.G..H.I..BF", side = 4, line = 3, col = "blue", cex = 0.7)
-  bk. <- filter(df., X.G..H.I..BF != 0.000000002)
+  bk. <- dplyr::filter(df., X.G..H.I..BF != 0.000000002)
   points(bk.$Boulder.nb.bmS, bk.$X.G..H.I..BF, col = "blue")
-  bk.red <- filter(df., X.G..H.I..BF == 0.000000001)
+  bk.red <- dplyr::filter(df., X.G..H.I..BF == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$X.G..H.I..BF, col = "red")
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VrFS.BM, xlab = "Bloc mobile", ylab = "VrFS.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VrFS.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VrFS.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VrFS.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$QEBM.2, xlab = "Bloc mobile", ylab = "QEBM.2", xlim = c(1,10), pch = 19, xaxt = "n")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
-  bk. <- filter(df., QEBM.2 != 0.000000001)
+  bk. <- dplyr::filter(df., QEBM.2 != 0.000000001)
   points(bk.$Boulder.nb.bmS, bk.$QEBM.2, col = "black", pch = 19)
-  bk.red. <- filter(df., QEBM.2 == 0.000000001)
+  bk.red. <- dplyr::filter(df., QEBM.2 == 0.000000001)
   points(bk.red.$Boulder.nb.bmS, bk.red.$QEBM.2, col = "red", pch = 19)
   
   plot(-1:1, -1:1, axes = FALSE, xlab = NA, ylab = NA, xaxt = "n", yaxt = "n", cex = 0)
@@ -2547,7 +2461,7 @@ for (i in c(1:100)) {
 for (i in c(101:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
   
   library(dplyr)
-  filter(qecb.val.qu., Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[i]) -> df.  
+  dplyr::filter(qecb.val.qu., Site.Year.Month.Day == unique(qecb.val.qu.$Site.Year.Month.Day)[i]) -> df.  
   
   max.bm = length(na.omit(c(df.$Boulder.nb.bmS, df.$Boulder.nb.bmI)))/2
   max.bf = length(na.omit(df.$Boulder.nb.bf))
@@ -2572,7 +2486,7 @@ for (i in c(101:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
   # For blocs mobiles/fixes, only use variable Boulder.nb.bmS; does refer here to a bloc, but not to its particular nb (globally for blocs fixé / Roche en place)
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VFS.BM, xlab = "", ylab = "VFS.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VFS.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VFS.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VFS.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   mtext("Bloc mobile /  ", side = 1, line = 3, cex = 0.7)
@@ -2581,28 +2495,28 @@ for (i in c(101:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
   with(df., plot(Boulder.nb.bmS, VrFS.BF, axes = FALSE, xlab = NA, ylab = NA, yaxt = "n", cex = 0))
   axis(side = 4)
   mtext("VrFS.BF", side = 4, line = 3, col = "blue", cex = 0.7)
-  bk. <- filter(df., VrFS.BF != 0.000000002)
+  bk. <- dplyr::filter(df., VrFS.BF != 0.000000002)
   points(bk.$Boulder.nb.bmS, bk.$VrFS.BF, col = "blue")
-  bk.red <- filter(df., VrFS.BF == 0.000000001)
+  bk.red <- dplyr::filter(df., VrFS.BF == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VrFS.BF, col = "red")
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VFI.BM, xlab = "Bloc mobile", ylab = "VFI.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VFI.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VFI.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VFI.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VFSI.BM, xlab = "Bloc mobile", ylab = "VFSI.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VFSI.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VFSI.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VFSI.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$QEBM.1, xlab = "Bloc mobile", ylab = "QEBM.1", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., QEBM.1 == 0.000000001)
+  bk.red <- dplyr::filter(df., QEBM.1 == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$QEBM.1, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$X.G..H.I..S.BM, xlab = "", ylab = "X.G..H.I..S.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., X.G..H.I..S.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., X.G..H.I..S.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$X.G..H.I..S.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   mtext("Bloc mobile /  ", side = 1, line = 3, cex = 0.7)
@@ -2611,21 +2525,21 @@ for (i in c(101:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
   with(df., plot(Boulder.nb.bmS, X.G..H.I..BF, axes = FALSE, xlab = NA, ylab = NA, yaxt = "n", cex = 0))
   axis(side = 4)
   mtext("X.G..H.I..BF", side = 4, line = 3, col = "blue", cex = 0.7)
-  bk. <- filter(df., X.G..H.I..BF != 0.000000002)
+  bk. <- dplyr::filter(df., X.G..H.I..BF != 0.000000002)
   points(bk.$Boulder.nb.bmS, bk.$X.G..H.I..BF, col = "blue")
-  bk.red <- filter(df., X.G..H.I..BF == 0.000000001)
+  bk.red <- dplyr::filter(df., X.G..H.I..BF == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$X.G..H.I..BF, col = "red")
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$VrFS.BM, xlab = "Bloc mobile", ylab = "VrFS.BM", xlim = c(1,10), pch = 19, xaxt = "n")
-  bk.red <- filter(df., VrFS.BM == 0.000000001)
+  bk.red <- dplyr::filter(df., VrFS.BM == 0.000000001)
   points(bk.red$Boulder.nb.bmS, bk.red$VrFS.BM, pch = 19, col = "red")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
   
   plot(as.numeric(df.$Boulder.nb.bmS), df.$QEBM.2, xlab = "Bloc mobile", ylab = "QEBM.2", xlim = c(1,10), pch = 19, xaxt = "n")
   axis(1, at = c(1,2,3,4,5,6,7,8,9,10), labels = c(1,2,3,4,5,6,7,8,9,10))
-  bk. <- filter(df., QEBM.2 != 0.000000001)
+  bk. <- dplyr::filter(df., QEBM.2 != 0.000000001)
   points(bk.$Boulder.nb.bmS, bk.$QEBM.2, col = "black", pch = 19)
-  bk.red. <- filter(df., QEBM.2 == 0.000000001)
+  bk.red. <- dplyr::filter(df., QEBM.2 == 0.000000001)
   points(bk.red.$Boulder.nb.bmS, bk.red.$QEBM.2, col = "red", pch = 19)
   
   plot(-1:1, -1:1, axes = FALSE, xlab = NA, ylab = NA, xaxt = "n", yaxt = "n", cex = 0)
@@ -2637,7 +2551,7 @@ for (i in c(101:length(unique(qecb.val.qu.$Site.Year.Month.Day)))) {
   
 }
 
-#filter(df., Site.Year.Month.Day == unique(df.$Site.Year.Month.Day)) -> check
+#dplyr::filter(df., Site.Year.Month.Day == unique(df.$Site.Year.Month.Day)) -> check
 #unique(check$Site.Year.Month.Day)
 #rm(check)
 
@@ -2650,7 +2564,7 @@ min(qecb.val.$Date) ; max(qecb.val.$Date)
 for (i in c(1:length(unique(qecb.val.$Site)))) {
   
 library(dplyr)
-filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> df. 
+dplyr::filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> df. 
 
 library(stringr)
 xmin. <- as.Date(ifelse(min(as.numeric(substring(df.$Date, 1, 4))) >= 2014, "2014-01-01", paste0(min(as.numeric(substring(df.$Date, 1, 4))), "-01-01")), origin = "1970-01-01")
@@ -2674,19 +2588,19 @@ plot(df.$Date, df.$VrFS.BM.moy, xlab = "Date", ylab = "VrFS.BM.moy", pch = 19, x
 plot(df.$Date, df.$VrFS.BF.moy, xlab = "Date", ylab = "VrFS.BF.moy", pch = 19, xlim = c(xmin., xmax.), main = unique(df.$Site)
 )
 
-bk. <- filter(df., VrFS.BF.moy == 0.000000001)
+bk. <- dplyr::filter(df., VrFS.BF.moy == 0.000000001)
 points(bk.$Date, bk.$VrFS.BF.moy, pch = 19, col = "red")
 
 plot(df.$Date, df.$X.VrFS.BM.moy.VrFS.BF.moy., xlab = "Date", ylab = "X.VrFS.BM.moy.VrFS.BF.moy.", pch = 19, xlim = c(xmin., xmax.), main = unique(df.$Site)
 )
 
-bk. <- filter(df., X.VrFS.BM.moy.VrFS.BF.moy. == 0.000000001)
+bk. <- dplyr::filter(df., X.VrFS.BM.moy.VrFS.BF.moy. == 0.000000001)
 points(bk.$Date, bk.$X.VrFS.BM.moy.VrFS.BF.moy., pch = 19, col = "red")
 
 plot(df.$Date, df.$QECB, xlab = "Date", ylab = "QECB", pch = 19, xlim = c(xmin., xmax.), main = unique(df.$Site)
 )
 
-bk. <- filter(df., QECB == 0.000000001 | QECB > 420 | QECB < -420)
+bk. <- dplyr::filter(df., QECB == 0.000000001 | QECB > 420 | QECB < -420)
 points(bk.$Date, bk.$QECB, pch = 19, col = "red")
 
 rm(bk., xmax., xmin.)
@@ -2702,7 +2616,7 @@ par(mar=c(5, 4, 4, 2) + 0.1)
 
 for (i in c(1:length(unique(qecb.val.$Site)))) {
   
-  filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> qecb.val.eg
   
   library(stringr)
   xmin. <- as.Date(ifelse(min(as.numeric(substring(qecb.val.eg$Date, 1, 4))) >= 2014, "2014-01-01", paste0(min(as.numeric(substring(qecb.val.eg$Date, 1, 4))), "-01-01")), origin = "1970-01-01")
@@ -2716,7 +2630,7 @@ for (i in c(1:length(unique(qecb.val.$Site)))) {
   
   plot(qecb.val.eg$Date, qecb.val.eg$QECB, xlim = c(xmin., xmax.), pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB", type = "b")
   
-  bk. <- filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
+  bk. <- dplyr::filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
   points(bk.$Date, bk.$QECB, pch = 19, col = "red")
   
   rm(bk., xmax., xmin.)
@@ -2737,7 +2651,7 @@ par(mar=c(5, 4, 4, 2) + 0.1)
 
 for (i in c(1:length(unique(qecb.val.$Site)))) {
   
-  filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> qecb.val.eg
   
   library(stringr)
   xmin. <- as.Date(ifelse(min(as.numeric(substring(qecb.val.eg$Date, 1, 4))) >= 2014, "2014-01-01", paste0(min(as.numeric(substring(qecb.val.eg$Date, 1, 4))), "-01-01")), origin = "1970-01-01")
@@ -2751,7 +2665,7 @@ for (i in c(1:length(unique(qecb.val.$Site)))) {
   
   plot(qecb.val.eg$Date, qecb.val.eg$QECB, xlim = c(xmin., xmax.), ylim = c(-360,360), pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB", type = "b")
   
-  bk. <- filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
+  bk. <- dplyr::filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
   points(bk.$Date, bk.$QECB, pch = 19, col = "red")
   
   rm(bk., xmax., xmin.)
@@ -2765,7 +2679,7 @@ par(mfrow = c(3,2))
 
 for (i in c(1:length(unique(qecb.val.$Site)))) {
   
-  filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val., Site == unique(qecb.val.$Site)[i]) -> qecb.val.eg
   
   library(stringr)
   xmin. <- as.Date(ifelse(min(as.numeric(substring(qecb.val.eg$Date, 1, 4))) >= 2014, "2014-01-01", paste0(min(as.numeric(substring(qecb.val.eg$Date, 1, 4))), "-01-01")), origin = "1970-01-01")
@@ -2779,17 +2693,17 @@ for (i in c(1:length(unique(qecb.val.$Site)))) {
   
   plot(qecb.val.eg$Date, qecb.val.eg$QECB, xlim = c(xmin., xmax.), pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB")
   
-  bk. <- filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
+  bk. <- dplyr::filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
   points(bk.$Date, bk.$QECB, pch = 19, col = "red")
   
   plot(qecb.val.eg$Date, qecb.val.eg$QECB, xlim = c(xmin., xmax.), ylim = c(-420,420), pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB")
   
-  bk. <- filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
+  bk. <- dplyr::filter(qecb.val.eg, QECB == 0.000000001 | QECB > 360 | QECB < -360)
   points(bk.$Date, bk.$QECB, pch = 19, col = "red")
   
   show(unique(qecb.val.eg$Site))
-  show(filter(qecb.val.eg, QECB < -360)["QECB"])
-  show(filter(qecb.val.eg, QECB > 360)["QECB"])
+  show(dplyr::filter(qecb.val.eg, QECB < -360)["QECB"])
+  show(dplyr::filter(qecb.val.eg, QECB > 360)["QECB"])
 
   rm(bk., xmax., xmin.)
   
@@ -2801,7 +2715,7 @@ for (i in c(1:length(unique(qecb.val.$Site)))) {
 unique(qecbNew$Site)
 x. <- grep("GroinCou", qecbNew$Site.Year.Month.Day)
 x. <- qecbNew[x.,]
-x. <- arrange(x., Date.fiche, Type.Bloc, Face)
+x. <- dplyr::arrange(x., date_fiche, Type.Bloc, Face)
 
 
 # summary plots
@@ -2814,7 +2728,7 @@ plot(qecb.val.$Date, qecb.val.$QECB, xlim = xlim., pch = 19, xlab = "Date", ylab
 qecb.NA<- qecb.val.
 qecb.NA$QECB <- ifelse(qecb.NA$QECB %in% c("Inf", "NaN"), 0.000000001, qecb.NA$QECB)
 qecb.NA$QECB <- ifelse(is.na(qecb.NA$QECB), 0.000000001, qecb.NA$QECB)
-bk. <- filter(qecb.NA, QECB == 0.000000001 | QECB > 360 | QECB < -360)
+bk. <- dplyr::filter(qecb.NA, QECB == 0.000000001 | QECB > 360 | QECB < -360)
 points(bk.$Date, bk.$QECB, pch = 19, col = "red")
 
 plot(qecb.val.$Date, qecb.val.$QECB, xlim = xlim., ylim = c(-360,360), pch = 19, xlab = "Date", ylab = "QECB")
@@ -2843,7 +2757,7 @@ rm(df., i, qecb.val.eg, x., xlim.)
 #x. <- na.omit(qecb.val.qu.[, c("QEBM.1", "QEBM.2")])
 #x. <- data.frame(x.)
 #summary(x.)
-#x. <- filter(x., QEBM.2 < 1000)
+#x. <- dplyr::filter(x., QEBM.2 < 1000)
 #(xp. <- cor(x.$QEBM.1, x.$QEBM.2))
 #corrplot::corrplot()
 
@@ -2853,7 +2767,7 @@ rm(df., i, qecb.val.eg, x., xlim.)
 qecb.val.qu.stat. <- readRDS("results/qecb/qecb.val.qu.stat.RDS")
 
 `%notin%` <- Negate(`%in%`)
-#qecb.val.qu.stat. <- filter(qecb.val.qu.stat., Site %notin% c("FINS_Quemenes", "FINS_SeinGoulenez"))
+#qecb.val.qu.stat. <- dplyr::filter(qecb.val.qu.stat., Site %notin% c("FINS_Quemenes", "FINS_SeinGoulenez"))
 qecb.val.qu.stat.NaN <- qecb.val.qu.stat.
 qecb.val.qu.stat.NaN[, c("qecb.moy", "qecb.et", "qecb.med", "qecb.min", "qecb.max")] <- ifelse(qecb.val.qu.stat.NaN[, c("qecb.moy", "qecb.et", "qecb.med", "qecb.min", "qecb.max")] %in% c("-Inf", "NaN"), NA, qecb.val.qu.stat.NaN[, c("qecb.moy", "qecb.et", "qecb.med", "qecb.min", "qecb.max")])
 
@@ -2866,7 +2780,7 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   
   library(hablar) # to remove (-)Inf for min and max fct
   
-  filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
   
   xmin. <- as.Date(ifelse(min(qecb.val.eg$Annee) >= 2014, "2014-01-01", paste0(min(qecb.val.eg$Annee), "-01-01")), origin = "1970-01-01")
   xmax. <- as.Date(ifelse(max(qecb.val.eg$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
@@ -2880,16 +2794,16 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   ymin. <- min(s(qecb.val.eg$qecb.moy - qecb.val.eg$qecb.et))
   ymax. <- max(s(qecb.val.eg$qecb.moy + qecb.val.eg$qecb.et))
   
-  filter(qecb.val.eg, nb.notNa > 2) -> sd.
+  dplyr::filter(qecb.val.eg, nb.notNa > 2) -> sd.
   
   plot(qecb.val.qu.stat.NaN$Date, qecb.val.qu.stat.NaN$qecb.moy, xlim = c(xmin., xmax.),
        ylim = c(ymin., ymax.), 
        pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB (moy. et ET)", col = "grey")
 
-  bk. <- filter(qecb.val.eg, qecb.moy != 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy != 0.000000001)
   points(bk.$Date, bk.$qecb.moy, pch = 19, cex = 1.5)
   arrows(sd.$Date, sd.$qecb.moy + sd.$qecb.et, sd.$Date, sd.$qecb.moy - sd.$qecb.et, code = 3, angle = 90, length = 0.00)
-  bk. <- filter(qecb.val.eg, qecb.moy == 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy == 0.000000001)
   points(bk.$Date, bk.$qecb.moy, col = "red", cex = 1.5)
   
   rm(xmin., xmax., qecb.val.eg, sd., bk.)
@@ -2905,7 +2819,7 @@ par(mfrow = c(3,2))
 
 for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   
-  filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
   
   xmin. <- as.Date(ifelse(min(qecb.val.eg$Annee) >= 2014, "2014-01-01", paste0(min(qecb.val.eg$Annee), "-01-01")), origin = "1970-01-01")
   xmax. <- as.Date(ifelse(max(qecb.val.eg$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
@@ -2919,16 +2833,16 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   ymin. <- min(qecb.val.eg$qecb.moy - qecb.val.eg$qecb.et, na.rm = T)
   ymax. <- max(qecb.val.eg$qecb.moy + qecb.val.eg$qecb.et, na.rm =T)
   
-  filter(qecb.val.eg, nb.notNa > 2) -> sd.
+  dplyr::filter(qecb.val.eg, nb.notNa > 2) -> sd.
   
   plot(qecb.val.qu.stat.NaN$Date, qecb.val.qu.stat.NaN$qecb.moy, xlim = c(xmin., xmax.),
        ylim = c(-360, 360), 
        pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB (moy. et ET)", col = "grey")
   
-  bk. <- filter(qecb.val.eg, qecb.moy != 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy != 0.000000001)
   points(bk.$Date, bk.$qecb.moy, pch = 19, cex = 1.5)
   arrows(sd.$Date, sd.$qecb.moy + sd.$qecb.et, sd.$Date, sd.$qecb.moy - sd.$qecb.et, code = 3, angle = 90, length = 0.00)
-  bk. <- filter(qecb.val.eg, qecb.moy == 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy == 0.000000001)
   points(bk.$Date, bk.$qecb.moy, col = "red", cex = 1.5)
   
   rm(xmin., xmax., qecb.val.eg, sd., bk.)
@@ -2944,7 +2858,7 @@ par(mfrow = c(3,2))
 
 for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   
-  filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
   
   xmin. <- as.Date(ifelse(min(qecb.val.eg$Annee) >= 2014, "2014-01-01", paste0(min(qecb.val.eg$Annee), "-01-01")), origin = "1970-01-01")
   xmax. <- as.Date(ifelse(max(qecb.val.eg$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
@@ -2958,7 +2872,7 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   ymin. <- min(qecb.val.eg$qecb.moy - qecb.val.eg$qecb.et, na.rm = T)
   ymax. <- max(qecb.val.eg$qecb.moy + qecb.val.eg$qecb.et, na.rm =T)
   
-  filter(qecb.val.eg, nb.notNa > 2) -> sd.
+  dplyr::filter(qecb.val.eg, nb.notNa > 2) -> sd.
   
   plot(qecb.val.eg$Date, qecb.val.eg$qecb.moy, xlim = c(xmin., xmax.), ylim = c(-360, 360), pch = 19, main = unique(qecb.val.eg$Site), xlab = "", ylab = "", type = 'n', axes = F
        #, yaxs = 'i'
@@ -2975,10 +2889,10 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
        ylim = c(-360, 360), 
        pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB (moy. et ET)", col = "grey")
   
-  bk. <- filter(qecb.val.eg, qecb.moy != 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy != 0.000000001)
   points(bk.$Date, bk.$qecb.moy, pch = 19, cex = 1.5)
   arrows(sd.$Date, sd.$qecb.moy + sd.$qecb.et, sd.$Date, sd.$qecb.moy - sd.$qecb.et, code = 3, angle = 90, length = 0.00)
-  bk. <- filter(qecb.val.eg, qecb.moy == 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy == 0.000000001)
   points(bk.$Date, bk.$qecb.moy, col = "red", cex = 1.5)
   
   rm(xmin., xmax., qecb.val.eg, sd., bk.)
@@ -2990,21 +2904,21 @@ par(mfrow = c(1,1))
 
 # New quality scale based on quartiles
 
-filter(qecb.val.qu.NaN, QEBM.2 >= -360) -> dt.
-filter(dt., QEBM.2 <= 360) -> dt. 
+dplyr::filter(qecb.val.qu.NaN, QEBM.2 >= -360) -> dt.
+dplyr::filter(dt., QEBM.2 <= 360) -> dt. 
 quantile(dt.$QEBM.2, c(0.06, 0.94), na.rm=T)
 quantile(dt.$QEBM.2, c(0.05, 0.95), na.rm=T)
 min(dt.$QEBM.2) ; max(dt.$QEBM.2)
 hist(dt.$QEBM.2, xlim = c(-150, 150), breaks = 100, main = "", xlab = "QEBM.2", ylab = "Fréquence")
 
-filter(dt., QEBM.2 >= quantile(dt.$QEBM.2, c(0.05), na.rm=T)) -> dt.bis
-filter(dt.bis, QEBM.2 <= quantile(dt.bis$QEBM.2, c(0.95), na.rm=T)) -> dt.bis
+dplyr::filter(dt., QEBM.2 >= quantile(dt.$QEBM.2, c(0.05), na.rm=T)) -> dt.bis
+dplyr::filter(dt.bis, QEBM.2 <= quantile(dt.bis$QEBM.2, c(0.95), na.rm=T)) -> dt.bis
 
 par(mfrow = c(3,2))
 # I have unactivated the model line drawing because aberant for some sites with bad qecb values
 for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   
-  filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
   
   xmin. <- as.Date(ifelse(min(qecb.val.eg$Annee) >= 2014, "2014-01-01", paste0(min(qecb.val.eg$Annee), "-01-01")), origin = "1970-01-01")
   xmax. <- as.Date(ifelse(max(qecb.val.eg$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
@@ -3018,16 +2932,16 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   ymin. <- min(qecb.val.eg$qecb.moy - qecb.val.eg$qecb.et, na.rm = T)
   ymax. <- max(qecb.val.eg$qecb.moy + qecb.val.eg$qecb.et, na.rm =T)
   
-  filter(qecb.val.eg, nb.notNa > 2) -> sd.
+  dplyr::filter(qecb.val.eg, nb.notNa > 2) -> sd.
   
   plot(qecb.val.eg$Date, qecb.val.eg$qecb.moy, xlim = c(xmin., xmax.), ylim = c(-80, 120), pch = 19, main = unique(qecb.val.eg$Site), xlab = "", ylab = "", type = 'n', axes = F
        #, yaxs = 'i'
   )
   
-  one <- mean(unlist(filter(dt.bis, QEBM.2 <= quantile(dt.bis$QEBM.2, 0.25, na.rm = T))["QEBM.2"]))
-  two <- mean(unlist(filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.25, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.5, na.rm = T))["QEBM.2"]))
-  three <- mean(unlist(filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.5, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
-  four <- mean(unlist(filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
+  one <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 <= quantile(dt.bis$QEBM.2, 0.25, na.rm = T))["QEBM.2"]))
+  two <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.25, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.5, na.rm = T))["QEBM.2"]))
+  three <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.5, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
+  four <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
   
   rect(as.Date("2013-01-01", origin = "1970-01-01"), -400, as.Date("2023-01-01", origin = "1970-01-01"), one, col = "red", border = NA)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), one, as.Date("2023-01-01", origin = "1970-01-01"), two, col = "orange", border = NA)
@@ -3041,19 +2955,19 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
        ylim = c(-360, 360), 
        pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB (moy. et ET)", col = "grey")
   
-  bk. <- filter(qecb.val.eg, qecb.moy != 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy != 0.000000001)
   points(bk.$Date, bk.$qecb.moy, pch = 19, cex = 1.5)
   arrows(sd.$Date, sd.$qecb.moy + sd.$qecb.et, sd.$Date, sd.$qecb.moy - sd.$qecb.et, code = 3, angle = 90, length = 0.00)
-  bk. <- filter(qecb.val.eg, qecb.moy == 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy == 0.000000001)
   points(bk.$Date, bk.$qecb.moy, col = "red", cex = 1.5)
  
-  filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg
-  filter(qecb.val.mod.eg, !is.na(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg
-  filter(qecb.val.mod.eg, is.finite(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg 
+  dplyr::filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg
+  dplyr::filter(qecb.val.mod.eg, !is.na(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg
+  dplyr::filter(qecb.val.mod.eg, is.finite(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg 
   
   nrow(qecb.val.mod.eg)
   if (nrow(qecb.val.mod.eg) == 0) {
-    filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg.Na.only
+    dplyr::filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg.Na.only
     qecb.val.mod.eg.Na.only[, "QEBM.2"] <- 1
     lw. <- loess(is.na(qecb.val.mod.eg.Na.only$QEBM.2) ~ as.numeric(qecb.val.mod.eg.Na.only$Date), span = 3)
   } else {
@@ -3083,7 +2997,7 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   
   #i <- 14
      
-  filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
+  dplyr::filter(qecb.val.qu.stat.NaN, Site == unique(qecb.val.qu.stat.NaN$Site)[i]) -> qecb.val.eg
   
   xmin. <- as.Date(ifelse(min(qecb.val.eg$Annee) >= 2014, "2014-01-01", paste0(min(qecb.val.eg$Annee), "-01-01")), origin = "1970-01-01")
   xmax. <- as.Date(ifelse(max(qecb.val.eg$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
@@ -3097,16 +3011,16 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
   ymin. <- min(qecb.val.eg$qecb.moy - qecb.val.eg$qecb.et, na.rm = T)
   ymax. <- max(qecb.val.eg$qecb.moy + qecb.val.eg$qecb.et, na.rm =T)
   
-  filter(qecb.val.eg, nb.notNa > 2) -> sd.
+  dplyr::filter(qecb.val.eg, nb.notNa > 2) -> sd.
   
   plot(qecb.val.eg$Date, qecb.val.eg$qecb.moy, xlim = c(xmin., xmax.), ylim = c(-80, 120), pch = 19, main = unique(qecb.val.eg$Site), xlab = "", ylab = "", type = 'n', axes = F
        #, yaxs = 'i'
   )
   
-  one <- mean(unlist(filter(dt.bis, QEBM.2 <= quantile(dt.bis$QEBM.2, 0.25, na.rm = T))["QEBM.2"]))
-  two <- mean(unlist(filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.25, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.5, na.rm = T))["QEBM.2"]))
-  three <- mean(unlist(filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.5, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
-  four <- mean(unlist(filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
+  one <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 <= quantile(dt.bis$QEBM.2, 0.25, na.rm = T))["QEBM.2"]))
+  two <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.25, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.5, na.rm = T))["QEBM.2"]))
+  three <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.5, na.rm = T) & QEBM.2 <= quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
+  four <- mean(unlist(dplyr::filter(dt.bis, QEBM.2 > quantile(dt.bis$QEBM.2, 0.75, na.rm = T))["QEBM.2"]))
   
   rect(as.Date("2013-01-01", origin = "1970-01-01"), -400, as.Date("2023-01-01", origin = "1970-01-01"), one, col = "red", border = NA)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), one, as.Date("2023-01-01", origin = "1970-01-01"), two, col = "orange", border = NA)
@@ -3120,19 +3034,19 @@ for (i in c(1:length(unique(qecb.val.qu.stat.NaN$Site)))) {
        #ylim = c(-360, 360), 
        pch = 19, main = unique(qecb.val.eg$Site), xlab = "Date", ylab = "QECB (moy. et ET)", col = "grey")
   
-  bk. <- filter(qecb.val.eg, qecb.moy != 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy != 0.000000001)
   points(bk.$Date, bk.$qecb.moy, pch = 19, cex = 1.5)
   arrows(sd.$Date, sd.$qecb.moy + sd.$qecb.et, sd.$Date, sd.$qecb.moy - sd.$qecb.et, code = 3, angle = 90, length = 0.00)
-  bk. <- filter(qecb.val.eg, qecb.moy == 0.000000001)
+  bk. <- dplyr::filter(qecb.val.eg, qecb.moy == 0.000000001)
   points(bk.$Date, bk.$qecb.moy, col = "red", cex = 1.5)
   
-  filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg
-  filter(qecb.val.mod.eg, !is.na(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg
-  filter(qecb.val.mod.eg, is.finite(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg 
+  dplyr::filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg
+  dplyr::filter(qecb.val.mod.eg, !is.na(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg
+  dplyr::filter(qecb.val.mod.eg, is.finite(qecb.val.mod.eg$QEBM.2)) -> qecb.val.mod.eg 
   
   nrow(qecb.val.mod.eg)
   if (nrow(qecb.val.mod.eg) == 0) {
-    filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg.Na.only
+    dplyr::filter(qecb.val.qu.NaN, Site == unique(qecb.val.eg$Site)) -> qecb.val.mod.eg.Na.only
     qecb.val.mod.eg.Na.only[, "QEBM.2"] <- 1
     lw. <- loess(is.na(qecb.val.mod.eg.Na.only$QEBM.2) ~ as.numeric(qecb.val.mod.eg.Na.only$Date), span = 3)
   } else {

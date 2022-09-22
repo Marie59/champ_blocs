@@ -18,7 +18,6 @@
 #               cowplot
 #               magrittr
 #               rmarkdown
-          
 library(magrittr)
 #####Load arguments
 
@@ -37,19 +36,19 @@ if (length(args) < 1) {
 
 ## load ivr data
 
-ivr <- read.csv2(input_data, header = FALSE, fileEncoding = "Latin1") 
-names_ <- as.vector(unlist(ivr[1,]))
+ivr <- read.csv2(input_data, header = FALSE, fileEncoding = "Latin1")
+names_ <- as.vector(unlist(ivr[1, ]))
 names_ <- gsub(" ", ".", names_)
 colnames(ivr) <- names_
-ivr <- ivr[-1,]
+ivr <- ivr[-1, ]
 ivr <- ivr[, -17]
 
 ivr_next <- read.csv2(input_data2, header = FALSE, fileEncoding = "Latin1")
-names_ <- as.vector(unlist(ivr_next[1,]))
+names_ <- as.vector(unlist(ivr_next[1, ]))
 names_ <- gsub(" ", ".", names_)
 colnames(ivr_next) <- names_
 rm(names_)
-ivr_next <- ivr_next[-1,]
+ivr_next <- ivr_next[-1, ]
 ivr_next <- ivr_next[, -17]
 
 # bind ivr dfs.
@@ -84,7 +83,7 @@ ivr$id <- as.numeric(ivr[, c("id")])
 
 fiche_red <- dplyr::filter(fiche, fiche$ID.Fiche %in% unique(ivr[, c("id")]))
 
-ivr %>% dplyr::group_by(id) %>% dplyr::count() -> id_count
+id_count <- ivr %>% dplyr::group_by(id) %>% dplyr::count()
 id_count <- dplyr::rename(id_count, "ID.Fiche" = "id")
 id_count <- dplyr::ungroup(id_count)
 id_count <- as.data.frame(id_count)
@@ -103,7 +102,7 @@ ivr <- dplyr::rename(ivr, "id.fiche" = "id...17")
 
 rm(fiche_expanded, fiche_red, id_count)
 
-ivr %>% tidyr::separate(date_fiche, c("Year", "Month", "Day"), sep = "-", remove = FALSE) -> ivr
+ivr <- ivr %>% tidyr::separate(date_fiche, c("Year", "Month", "Day"), sep = "-", remove = FALSE)
 
 
 ## I create two new variables for Site names, one for data analysis and one for data reporting. Only works for actual ivr df with 22 sites !
@@ -193,45 +192,39 @@ saveRDS(ivr, "ivr.RDS")
 
 ## percentage of unturned vs overturned boulders and IVR previous 0-5 discrete scale values calculation
 
-#ivr <- readRDS("IVR/ivr_RDS")
-
 # create two new variables first
 
-Site.Year.Month.Day <- paste0(ivr$Site, ".", gsub("-", ".", as.character(ivr$date_fiche)))
-ivr <- tibble::add_column(ivr, Site.Year.Month.Day, .after = "Site_bis")
-rm(Site.Year.Month.Day)
+site_year_month_day <- paste0(ivr$Site, ".", gsub("-", ".", as.character(ivr$date_fiche)))
+ivr <- tibble::add_column(ivr, site_year_month_day, .after = "Site_bis")
+rm(site_year_month_day)
 
-Site.Year.Month.Day.QdNb <- paste0(ivr$Site, ".", gsub("-", ".", as.character(ivr$Date)), ".", ivr$Numero.Quadrat)
-ivr <- tibble::add_column(ivr, Site.Year.Month.Day.QdNb, .after = "Site.Year.Month.Day")
-rm(Site.Year.Month.Day.QdNb)
+site_year_month_day_qdnb <- paste0(ivr$Site, ".", gsub("-", ".", as.character(ivr$Date)), ".", ivr$Numero.Quadrat)
+ivr <- tibble::add_column(ivr, site_year_month_day_qdnb, .after = "site_year_month_day")
+rm(site_year_month_day_qdnb)
 
 ivr <- dplyr::arrange(ivr, Site, Year, Month, Numero.Quadrat)
 
-# remove data with NA value for Nb.Blocs.Retournes & Nb.Blocs.Non.Retournes 
-ivr %>% dplyr::filter(!is.na(ivr$Nb.Blocs.Retournes)) -> ivr_naomit
+# remove data with NA value for Nb.Blocs.Retournes & Nb.Blocs.Non.Retournes
+ivr_naomit <- ivr %>% dplyr::filter(!is.na(ivr$Nb.Blocs.Retournes))
 ivr_naomit <- as.data.frame(ivr_naomit)
 colnames(ivr_naomit) <- colnames(ivr)
-ivr_naomit %>% dplyr::filter(!is.na(ivr_naomit$Nb.Blocs.Non.Retournes)) -> ivr_naomit
+ivr_naomit <- ivr_naomit %>% dplyr::filter(!is.na(ivr_naomit$Nb.Blocs.Non.Retournes))
 ivr_naomit <- as.data.frame(ivr_naomit)
 
 # also remove data with Nb.Blocs.Retournes = 0 & Nb.Blocs.Non.Retournes = 0, cfr equivalent to quadrat with no boulders ... makes no sense to consider quadrat without boulder for ivr determination.
-dplyr::filter(ivr_naomit, ivr_naomit$Nb.Blocs.Retournes == 0 && ivr_naomit$Nb.Blocs.Non.Retournes == 0) -> ivr_rm
-#ivr_rm <- as.data.frame(ivr_rm)
-#ivr_naomit <- as.data.frame(ivr_naomit)
-ivr_naomit %>% dplyr::anti_join(ivr_rm) -> ivr_naomit
+ivr_rm <- dplyr::filter(ivr_naomit, ivr_naomit$Nb.Blocs.Retournes == 0 && ivr_naomit$Nb.Blocs.Non.Retournes == 0)
+ivr_naomit <- ivr_naomit %>% dplyr::anti_join(ivr_rm)
 rm(ivr_rm)
 
 ivr_val_qu_ <- ivr_naomit
 
 for (i in 1:nrow(ivr_naomit)) {
-  
-  (BM <- sum(ivr_naomit$Nb.Blocs.Non.Retournes[i], ivr_naomit$Nb.Blocs.Retournes[i]))
-  (ivr_val_qu_$blocs.retournes.fr.[i] <- (ivr_naomit$Nb.Blocs.Retournes[i] / BM) * 100)
-  (ivr_val_qu_$blocs.non.retournes.fr.[i]  <- (ivr_naomit$Nb.Blocs.Non.Retournes[i] / BM) * 100)
-  
-}  
+  (bm <- sum(ivr_naomit$Nb.Blocs.Non.Retournes[i], ivr_naomit$Nb.Blocs.Retournes[i]))
+  (ivr_val_qu_$blocs.retournes.fr.[i] <- (ivr_naomit$Nb.Blocs.Retournes[i] / bm) * 100)
+  (ivr_val_qu_$blocs.non.retournes.fr.[i]  <- (ivr_naomit$Nb.Blocs.Non.Retournes[i] / bm) * 100) 
+}
 
-rm(BM, i)
+rm(bm, i)
 
 ivr_val_qu_$blocs.non.retournes.fr. <- ifelse(is.nan(ivr_val_qu_$blocs.non.retournes.fr.), NA, ivr_val_qu_$blocs.non.retournes.fr.)
 ivr_val_qu_$blocs.retournes.fr. <- ifelse(is.nan(ivr_val_qu_$blocs.retournes.fr.), NA, ivr_val_qu_$blocs.retournes.fr.)
@@ -244,18 +237,18 @@ for (i in 1:nrow(ivr_val_qu_)) {
   }else {
   if (ivr_val_qu_$blocs.retournes.fr.[i] < 5) {
     ivr_ <- 0
-  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 5 & ivr_val_qu_$blocs.retournes.fr.[i] < 25) {
+  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 5 && ivr_val_qu_$blocs.retournes.fr.[i] < 25) {
     ivr_ <- 1
-  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 25 & ivr_val_qu_$blocs.retournes.fr.[i] < 45) {
+  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 25 && ivr_val_qu_$blocs.retournes.fr.[i] < 45) {
     ivr_ <- 2
-  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 45 & ivr_val_qu_$blocs.retournes.fr.[i] < 65) {
+  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 45 && ivr_val_qu_$blocs.retournes.fr.[i] < 65) {
     ivr_ <- 3
-  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 65 & ivr_val_qu_$blocs.retournes.fr.[i] < 85) {
+  } else if (ivr_val_qu_$blocs.retournes.fr.[i] >= 65 && ivr_val_qu_$blocs.retournes.fr.[i] < 85) {
     ivr_ <- 4
   } else {
     ivr_ <- 5
   }
-  
+
   ivr_val_qu_$valeur.ivr_quadrat[i] <- ivr_
   }
 }
@@ -263,7 +256,7 @@ for (i in 1:nrow(ivr_val_qu_)) {
 rm(i, ivr_)
 
 # reorder variables for logical purpose
-ivr_val_qu_ <- ivr_val_qu_[, c(1:56,58,57,59)]
+ivr_val_qu_ <- ivr_val_qu_[, c(1:56, 58, 57, 59)]
 ivr_test_full <- ivr_val_qu_
 saveRDS(ivr_val_qu_, "ivr_val_qu.RDS")
 
@@ -272,9 +265,7 @@ rm(ivr_naomit)
 
 ## Calculate ivr statistics now
 
-#ivr_val_qu_ <- readRDS("IVR/ivr_val_qu_RDS")
-
-ivr_val_qu_ %>% dplyr::group_by(id.ivr, Site, Site_bis, Year, Month, Day) %>% dplyr::summarize(ivr_moy = mean(valeur.ivr_quadrat), ivr_et = sd(valeur.ivr_quadrat), ivr_med = median(valeur.ivr_quadrat), ivr_min = min(valeur.ivr_quadrat), ivr_max = max(valeur.ivr_quadrat), fr.r.moy = mean(blocs.retournes.fr.), fr.r.et = sd(blocs.retournes.fr.), fr.r.med = median(blocs.retournes.fr.), fr.r.min = min(blocs.retournes.fr.), fr.r.max = max(blocs.retournes.fr.), fr.nr.moy = mean(blocs.non.retournes.fr.), fr.nr.et = sd(blocs.non.retournes.fr.), fr.nr.med = median(blocs.non.retournes.fr.), fr.nr.min = min(blocs.non.retournes.fr.), fr.nr.max = max(blocs.non.retournes.fr.), nb. = dplyr::n()) -> ivr_val_qu_stat_
+ivr_val_qu_stat_ <- ivr_val_qu_ %>% dplyr::group_by(id.ivr, Site, Site_bis, Year, Month, Day) %>% dplyr::summarize(ivr_moy = mean(valeur.ivr_quadrat), ivr_et = sd(valeur.ivr_quadrat), ivr_med = median(valeur.ivr_quadrat), ivr_min = min(valeur.ivr_quadrat), ivr_max = max(valeur.ivr_quadrat), fr.r.moy = mean(blocs.retournes.fr.), fr.r.et = sd(blocs.retournes.fr.), fr.r.med = median(blocs.retournes.fr.), fr.r.min = min(blocs.retournes.fr.), fr.r.max = max(blocs.retournes.fr.), fr.nr.moy = mean(blocs.non.retournes.fr.), fr.nr.et = sd(blocs.non.retournes.fr.), fr.nr.med = median(blocs.non.retournes.fr.), fr.nr.min = min(blocs.non.retournes.fr.), fr.nr.max = max(blocs.non.retournes.fr.), nb. = dplyr::n())
 
 Date <- as.Date(paste0(ivr_val_qu_stat_$Year, "-", ivr_val_qu_stat_$Month, "-", ivr_val_qu_stat_$Day), origin = "1970-01-01")
 ivr_val_qu_stat_ <- tibble::add_column(ivr_val_qu_stat_, Date, .after = "Site_bis")
@@ -287,74 +278,60 @@ saveRDS(ivr_val_qu_stat_, "ivr_val_qu_stat.RDS")
 
 ## plot ivr (NB: Year, Month, Day variable names are replace by Annee, Mois, Jour, cfr previous label use in the script)
 
-#ivr_val_qu_stat_ <- readRDS("IVR/ivr_val_qu_stat_RDS")
-
 ivr_val_qu_stat_ <- dplyr::rename(ivr_val_qu_stat_, Annee = Year)
 ivr_val_qu_stat_ <- dplyr::rename(ivr_val_qu_stat_, Mois = Month)
 ivr_val_qu_stat_ <- dplyr::rename(ivr_val_qu_stat_, Jour = Day)
-write.table(ivr_val_qu_stat_, "Valeurs_stat.tabular",row.names = FALSE, quote = FALSE, sep = "\t", dec = ".", fileEncoding = "UTF-8")
+write.table(ivr_val_qu_stat_, "Valeurs_stat.tabular", row.names = FALSE, quote = FALSE, sep = "\t", dec = ".", fileEncoding = "UTF-8")
 # old IVR scale with discrete 0 to 5 environmental status levels, plus other site data
 
 for (i in c(1:length(unique(ivr_val_qu_stat_$Site)))) {
-  
-  dplyr::filter(ivr_val_qu_stat_, ivr_val_qu_stat_$Site == unique(ivr_val_qu_stat_$Site)[i]) -> ivr_val.eg
-  
-  xmin_ <- as.Date(ifelse(min(ivr_val.eg$Annee) >= 2014, "2014-01-01", paste0(min(ivr_val.eg$Annee), "-01-01")), origin = "1970-01-01")
-  xmax_ <- as.Date(ifelse(max(ivr_val.eg$Annee) <= 2017, "2018-01-01", #paste0(max(ivr_val.eg$Annee)+1, 
+  ivr_val_eg <- dplyr::filter(ivr_val_qu_stat_, ivr_val_qu_stat_$Site == unique(ivr_val_qu_stat_$Site)[i])
+
+  xmin_ <- as.Date(ifelse(min(ivr_val_eg$Annee) >= 2014, "2014-01-01", paste0(min(ivr_val_eg$Annee), "-01-01")), origin = "1970-01-01")
+  xmax_ <- as.Date(ifelse(max(ivr_val_eg$Annee) <= 2017, "2018-01-01", #paste0(max(ivr_val_eg$Annee)
                           "2022-01-01")
                    #)
                    , origin = "1970-01-01")
-  
-  png(paste0("old_ivr_", unique(ivr_val.eg$Site), ".png"))
-  plot(ivr_val_qu_stat_$Date, ivr_val_qu_stat_$ivr_med, xlim = c(xmin_, xmax_), ylim = c(-0.5,5.5), pch = 19, main = unique(ivr_val.eg$Site), xlab = "Date", ylab = "IVR (médiane, min. et max de 5 quadrats)", col = "grey")
-  
-  points(ivr_val.eg$Date, ivr_val.eg$ivr_med, pch = 19, cex = 1.5, #type = "b"
-         )
-  arrows(ivr_val.eg$Date, ivr_val.eg$ivr_med, ivr_val.eg$Date, ivr_val.eg$ivr_max, code = 3, angle = 90, length = 0.00)
-  arrows(ivr_val.eg$Date, ivr_val.eg$ivr_med, ivr_val.eg$Date, ivr_val.eg$ivr_min, code = 3, angle = 90, length = 0.00)
 
-  
+  png(paste0("old_ivr_", unique(ivr_val_eg$Site), ".png"))
+  plot(ivr_val_qu_stat_$Date, ivr_val_qu_stat_$ivr_med, xlim = c(xmin_, xmax_), ylim = c(-0.5, 5.5), pch = 19, main = unique(ivr_val_eg$Site), xlab = "Date", ylab = "IVR (médiane, min. et max de 5 quadrats)", col = "grey")
+
+  points(ivr_val_eg$Date, ivr_val_eg$ivr_med, pch = 19, cex = 1.5)
+  arrows(ivr_val_eg$Date, ivr_val_eg$ivr_med, ivr_val_eg$Date, ivr_val_eg$ivr_max, code = 3, angle = 90, length = 0.00)
+  arrows(ivr_val_eg$Date, ivr_val_eg$ivr_med, ivr_val_eg$Date, ivr_val_eg$ivr_min, code = 3, angle = 90, length = 0.00)
 }
 
-rm(ivr_val.eg)
+rm(ivr_val_eg)
 
 # new IVR scale with continuous 0 to 5 environmental status levels based on % of overturned boulders /20, plus other site data
 
-par(mar=c(5, 4, 2, 2) + 0.1)
+par(mar = c(5, 4, 2, 2) + 0.1)
 
-par(mfrow = c(1,1))
+par(mfrow = c(1, 1))
 
-for (i in c(1:length(unique(ivr_val_qu_stat_$Site)))) { 
-          #c(1,4,22,18,9,10)) { 
-  
-  dplyr::filter(ivr_val_qu_stat_, ivr_val_qu_stat_$Site == unique(ivr_val_qu_stat_$Site)[i]) -> ivr_val.eg
-  
-  xmin_ <- as.Date(ifelse(min(ivr_val.eg$Annee) >= 2014, "2014-01-01", paste0(min(ivr_val.eg$Annee), "-01-01")), origin = "1970-01-01")
-  xmax_ <- as.Date(ifelse(max(ivr_val.eg$Annee) <= 2017, "2018-01-01", #paste0(max(ivr_val.eg$Annee)+1, 
-                          "2022-01-01")
-                   #)
-                   , origin = "1970-01-01")
-  png(paste0("new_ivr_", unique(ivr_val.eg$Site), ".png"))
-  plot(ivr_val.eg$Date, ivr_val.eg$fr.r.moy/20, xlim = c(xmin_, xmax_), ylim = c(0,5), pch = 19, main = unique(ivr_val.eg$Site), xlab = "", ylab = "", type = 'n', axes = F
-       #, yaxs = 'i'
-  )
+for (i in c(1:length(unique(ivr_val_qu_stat_$Site)))) {
+          #c(1,4,22,18,9,10)) {
+  ivr_val_eg <- dplyr::filter(ivr_val_qu_stat_, ivr_val_qu_stat_$Site == unique(ivr_val_qu_stat_$Site)[i])
 
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 85/20, as.Date("2023-01-01", origin = "1970-01-01"), 5.5, col = "red", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 65/20, as.Date("2023-01-01", origin = "1970-01-01"), 85/20, col = "orange1", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 45/20, as.Date("2023-01-01", origin = "1970-01-01"), 65/20, col = "gold1", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 25/20, as.Date("2023-01-01", origin = "1970-01-01"), 45/20, col = "yellow", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), 5/20, as.Date("2023-01-01", origin = "1970-01-01"), 25/20, col = "olivedrab", border = NA)
-  rect(as.Date("2013-01-01", origin = "1970-01-01"), -0.5, as.Date("2023-01-01", origin = "1970-01-01"), 5/20, col = "blue", border = NA)
+  xmin_ <- as.Date(ifelse(min(ivr_val_eg$Annee) >= 2014, "2014-01-01", paste0(min(ivr_val_eg$Annee), "-01-01")), origin = "1970-01-01")
+  xmax_ <- as.Date(ifelse(max(ivr_val_eg$Annee) <= 2017, "2018-01-01", "2022-01-01"), origin = "1970-01-01")
 
-  par(new = T)
-  plot(ivr_val_qu_stat_$Date, ivr_val_qu_stat_$fr.r.moy/20, xlim = c(xmin_, xmax_), ylim = c(0,5), pch = 19, main = unique(ivr_val.eg$Site), xlab = "Date", ylab = 
-         #"blocs retournés (%/20, moy. et ET)",
-          "IVR", col = "grey")
-  
-  points(ivr_val.eg$Date, ivr_val.eg$fr.r.moy/20, pch = 19, cex = 1.5)
-  
-  arrows(ivr_val.eg$Date, ivr_val.eg$fr.r.moy/20 + ivr_val.eg$fr.r.et/20, ivr_val.eg$Date, ivr_val.eg$fr.r.moy/20 - ivr_val.eg$fr.r.et/20, code = 3, angle = 90, length = 0.00)
-  
-  rm(ivr_val.eg, i, xmax_, xmin_)
-  
+  png(paste0("new_ivr_", unique(ivr_val_eg$Site), ".png"))
+  plot(ivr_val_eg$Date, ivr_val_eg$fr.r.moy / 20, xlim = c(xmin_, xmax_), ylim = c(0,5), pch = 19, main = unique(ivr_val_eg$Site), xlab = "", ylab = "", type = "n", axes = FALSE)
+
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 85 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 5.5, col = "red", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 65 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 85 / 20, col = "orange1", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 45 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 65 / 20, col = "gold1", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 25 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 45 / 20, col = "yellow", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), 5 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 25 / 20, col = "olivedrab", border = NA)
+  rect(as.Date("2013-01-01", origin = "1970-01-01"), -0.5, as.Date("2023-01-01", origin = "1970-01-01"), 5 / 20, col = "blue", border = NA)
+
+  par(new = TRUE)
+  plot(ivr_val_qu_stat_$Date, ivr_val_qu_stat_$fr.r.moy / 20, xlim = c(xmin_, xmax_), ylim = c(0, 5), pch = 19, main = unique(ivr_val_eg$Site), xlab = "Date", ylab = "IVR", col = "grey")
+
+  points(ivr_val_eg$Date, ivr_val_eg$fr.r.moy / 20, pch = 19, cex = 1.5)
+
+  arrows(ivr_val_eg$Date, ivr_val_eg$fr.r.moy / 20 + ivr_val_eg$fr.r.et / 20, ivr_val_eg$Date, ivr_val_eg$fr.r.moy / 20 - ivr_val_eg$fr.r.et / 20, code = 3, angle = 90, length = 0.00)
+
+  rm(ivr_val_eg, i, xmax_, xmin_)
 }
