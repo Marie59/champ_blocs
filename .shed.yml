@@ -1,0 +1,14 @@
+categories:
+    - Ecology
+owner: ecology
+remote_repository_url: https://github.com/Marie59/indic_ivr
+long_description: |
+  Calculate ivr and qecb indicators
+type: unrestricted
+auto_tool_repositories:
+  name_template: "{{ tool_id }}"
+  description_template: "Wrapper for ivr and qecb indicators: {{ tool_name }}."
+suite:
+  name: "indic_ivr"
+  description: "A suite of biodiversity and ecology indicators"
+  type: unrestricted
