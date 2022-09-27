@@ -334,3 +334,6 @@ for (i in c(1:length(unique(ivr_val_qu_stat_$Site)))) {
 
   rm(ivr_val_eg, i, xmax_, xmin_)
 }
+
+report <- args[5]
+loop_file <- source(args[6])

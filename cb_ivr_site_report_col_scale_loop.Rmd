@@ -17,15 +17,10 @@ knitr::opts_chunk$set(
   , warning = FALSE
   )
 
-library(tidyverse)
-library(knitr)
-library(officer)
-library(officedown)
-
 df <- ivr_test
 df_full <- ivr_test_full
 
-df1 <- df %>% filter(Site == v)
+df1 <- df %>% dplyr::filter(df$Site == v)
 df1 <- droplevels(df1)
 ```
 
@@ -91,27 +86,24 @@ ivr_scale$Signification <- c("Pas de bloc ou de rares blocs retournés", "Faible
 ```
 
 ```{r}
+library(magrittr)
 
-library(dplyr)
-library(flextable)
+qu_tbl <- flextable::flextable(ivr_scale)
+qu_tbl <- flextable::bg(qu_tbl, i = 1, bg = "blue")
+qu_tbl <- flextable::bg(qu_tbl, i = 2, bg = "olivedrab")
+qu_tbl <- flextable::bg(qu_tbl, i = 3, bg = "yellow")
+qu_tbl <- flextable::bg(qu_tbl, i = 4, bg = "gold1")
+qu_tbl <- flextable::bg(qu_tbl, i = 5, bg = "orange1")
+qu_tbl <- flextable::bg(qu_tbl, i = 6, bg = "red")
 
-ivr_scale %>%
-  qu_tbl <- flextable()
-qu_tbl <- bg(qu_tbl, i = 1, bg = "blue")
-qu_tbl <- bg(qu_tbl, i = 2, bg = "olivedrab")
-qu_tbl <- bg(qu_tbl, i = 3, bg = "yellow")
-qu_tbl <- bg(qu_tbl, i = 4, bg = "gold1")
-qu_tbl <- bg(qu_tbl, i = 5, bg = "orange1")
-qu_tbl <- bg(qu_tbl, i = 6, bg = "red")
-
-qu_tbl %>% autofit() %>% fit_to_width(7)
+qu_tbl %>% flextable::autofit() %>% flextable::fit_to_width(7)
 
 ```
 
 Légende de la table. Pourcentages de blocs « blancs/verts », exprimés en une échelle continue de valeurs équivalentes d'IVR allant de 0 à 5.
 
 
-# Observations pour le suivi du site `r unique(df1$Site.bis)`
+# Observations pour le suivi du site `r unique(df1$Site_bis)`
 
 Les observations des taux de retournement/non retournement de blocs de vingt-quatre champs distribués le long de la façade Manche-Atlantique française sont stockées dans la base de données ESTAMP (http://www.pecheapied-loisir.fr/base-de-donnees-estamp/), hébergée par l'Office Français de la Biodiversité, créée dans le cadre du projet LIFE+ Pêche à Pied de Loisir, et que vous avez contribué à enrichir de vos observations. L'évolution des valeurs médianes de l'indice IVR: au site `r unique(df1$Site.bis)` et tous champs de blocs confondus, pour la période de suivi 2014-2017, est représentée graphiquement sur les deux figures ci-dessous. A des fins de comparaisons entre la précédente échelle discrète et la nouvelle échelle continue de valeurs d'IVR, et des distributions associées des valeurs d'indice en escalier ou continues, les deux représentations graphiques sont données.
 
@@ -127,11 +119,11 @@ par(mar = c(5, 5, 4, 2) + 0.1)
                    #)
                    , origin = "1970-01-01")
 
-  plot(df$Date, df$ivr.med, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, cex = 1, main = unique(df1$Site.bis), xlab = "Année", ylab = "IVR", col = "grey")
+  plot(df$Date, df$ivr.med, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, cex = 1, main = unique(df1$Site_bis), xlab = "Année", ylab = "IVR", col = "grey")
 
   points(df1$Date, df1$ivr.med, pch = 19, cex = 1.5)
-  arrows(df1$Date, df1$ivr.med, df1$Date, df1$ivr.max, code = 3, angle = 90, length = 0.00)
-  arrows(df1$Date, df1$ivr.med, df1$Date, df1$ivr.min, code = 3, angle = 90, length = 0.00)
+  arrows(df1$Date, df1$ivr_med, df1$Date, df1$ivr_max, code = 3, angle = 90, length = 0.00)
+  arrows(df1$Date, df1$ivr_med, df1$Date, df1$ivr_min, code = 3, angle = 90, length = 0.00)
 
 ```
 
@@ -145,7 +137,7 @@ par(mar = c(5, 5, 4, 2) + 0.1)
                    #)
                    , origin = "1970-01-01")
 
-  plot(df$Date, df$fr.r.med / 20, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, main = unique(df1$Site.bis), xlab = "", ylab = "", type = "n", axes = FALSE)
+  plot(df$Date, df$fr.r.med / 20, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, main = unique(df1$Site_bis), xlab = "", ylab = "", type = "n", axes = FALSE)
 
   rect(as.Date("2013-01-01", origin = "1970-01-01"), 85 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 6, col = "red", border = NA)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), 65 / 20, as.Date("2023-01-01", origin = "1970-01-01"), 85 / 20, col = "orange1", border = NA)
@@ -155,7 +147,7 @@ par(mar = c(5, 5, 4, 2) + 0.1)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), -1, as.Date("2023-01-01", origin = "1970-01-01"), 5 / 20, col = "blue", border = NA)
 
   par(new = TRUE)
-  plot(df$Date, df$fr.r.med / 20, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, main = unique(df1$Site.bis), xlab = "Année", ylab = "IVR", col = "grey")
+  plot(df$Date, df$fr.r.med / 20, xlim = c(xmin_, xmax_), ylim = c(-0.2, 5.2), pch = 19, main = unique(df1$Site_bis), xlab = "Année", ylab = "IVR", col = "grey")
   points(df1$Date, df1$fr.r.med / 20, pch = 19, cex = 1.5)
   arrows(df1$Date, df1$fr.r.med / 20, df1$Date, df1$fr.r.max / 20, code = 3, angle = 90, length = 0.00)
   arrows(df1$Date, df1$fr.r.med / 20, df1$Date, df1$fr.r.min / 20, code = 3, angle = 90, length = 0.00)

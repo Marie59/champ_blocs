@@ -38,6 +38,8 @@
               '$input_header_2_identifier'
               ''
               ''
+              ''
+              ''
             #else if $mode.criteria == 'A' and $mode.type_data.origin == 'zipper':
               ''
               ''
@@ -45,9 +47,22 @@
               ''
               '$mode.type_data.input1'
               '$mode.type_data.input2'
+              ''
+              ''
+            #else if $mode.criteria == 'A' and $mode.type_data.origin == 'raster':
+              '' 
+              ''
+              '' 
+              ''
+              ''
+              ''
+              'input_raster1'
+              'input_raster2'
             #else if $mode.criteria == 'B' and $mode.type_data.origin == 'envi_bil':
               '$input_raster_1_identifier' 
               '$input_header_1_identifier'
+              ''
+              ''
               ''
               ''
               ''
@@ -58,6 +73,17 @@
               ''
               ''
               '$mode.type_data.input1'
+              ''
+              ''
+              ''
+            #else if $mode.criteria == 'B' and $mode.type_data.origin == 'raster':
+              '' 
+              ''
+              ''
+              ''
+              ''
+              ''
+              'input_raster1'
               ''
             #end if
             '$output_rli'
@@ -79,6 +105,7 @@
                     <param name="origin" type="select" label="In which format are your data ?">
                         <option value="zipper">The data you are using are in a zip folder Reflectance</option>
                         <option value="envi_bil">Your already have the files in ENVI BIL format</option>
+                        <option value="raster">You have your data in a raster format : tif, ...</option>
                     </param>
                     <when value="zipper">
                         <param name="input1" type="data" format="zip" multiple="true" label="Input data 1"/>
@@ -90,6 +117,10 @@
                         <param name="input_raster_2" type="data" format="bil" label="Input raster 2"/>
                         <param name="input_header_2" type="data" format="hdr" label="Input header 2"/>
                     </when>
+                    <when value="raster">
+                        <param name="input1" type="data" format="data" label="Input data 1"/>
+                        <param name="input2" type="data" format="data" label="Input data 2"/>
+                    </when>
                 </conditional>
             </when>
             <when value="B">
@@ -97,6 +128,7 @@
                     <param name="origin" type="select" label="In which format are your data ?">
                         <option value="zipper">The data you are using are in a zip folder Reflectance</option>
                         <option value="envi_bil">Your already have the files in ENVI BIL format</option>
+                        <option value="raster">You have your data in a raster format : tif, ...</option>
                     </param>
                     <when value="zipper">
                         <param name="input1" type="data" format="zip" multiple="true" label="Input data 1"/>
@@ -105,13 +137,16 @@
                         <param name="input_raster_1" type="data" format="bil" label="Input raster 1"/>
                         <param name="input_header_1" type="data" format="hdr" label="Input header 1"/>
                     </when>
+                    <when value="raster">
+                        <param name="input1" type="data" format="data" label="Input data 1"/>
+                    </when>
                 </conditional>
             </when>
         </conditional>
     </inputs>
     <outputs>
-        <data name="output_rli" from_work_dir="repport.txt" format="txt" label="Red list criterion"/>
-        <collection type="list" name="plots" label="Criterion plot">
+        <data name="output_rli" from_work_dir="repport.txt" format="txt" label="Red list criterion ${mode.criteria}"/>
+        <collection type="list" name="plots" label="Criterion ${mode.criteria} plot">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
     </outputs>

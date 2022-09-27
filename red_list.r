@@ -7,7 +7,7 @@
 #####Packages : 
 #               raster
 #               sp
-
+library(redlistr)
 #####Load arguments
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -25,13 +25,15 @@ if (length(args) < 1) {
     rasterheader_2 <- args[6]
     data_1 <- args[7]
     data_2 <- args[8]
+    raster_1 <- args[9]
+    raster_2 <- args[10]
 }
 
 ################################################################################
 ##              DEFINE PARAMETERS FOR DATASET TO BE PROCESSED                 ##
 ################################################################################
 
-if (data_raster_1 == "") {
+if (data_raster_1 == "" && raster_1 == "") {
     #Create a directory where to unzip your folder of data
     dir.create("data_dir_1")
     unzip(data_1, exdir = "data_dir_1")
@@ -39,9 +41,11 @@ if (data_raster_1 == "") {
     data_raster <- list.files("data_dir_1/results/Reflectance", pattern = "_Refl")
     input_image_file <- file.path("data_dir_1/results/Reflectance", data_raster[1])
     input_header_file <- file.path("data_dir_1/results/Reflectance", data_raster[2])
-} else {
+} else if (data_raster_1 != "") {
     input_image_file <- file.path(getwd(), data_raster_1, fsep = "/")
     input_header_file <- file.path(getwd(), rasterheader_1, fsep = "/")
+} else if (raster_1 != "") {
+    input_image_file <- raster_1
 }
 if (data_raster_2 == "" && data_2 != "" ) {
     #Create a directory where to unzip your folder of data
@@ -51,27 +55,28 @@ if (data_raster_2 == "" && data_2 != "" ) {
     data_raster <- list.files("data_dir_2/results/Reflectance", pattern = "_Refl")
     input_image_file2 <- file.path("data_dir_2/results/Reflectance", data_raster[1])
     input_header_file2 <- file.path("data_dir_2/results/Reflectance", data_raster[2])
-
-} else if (data_raster_2 != "" && data_2 == "") {
+} else if (data_raster_2 != "" && data_2 == "" && raster_2 == "") {
     input_image_file <- file.path(getwd(), data_raster_1, fsep = "/")
     input_header_file <- file.path(getwd(), rasterheader_1, fsep = "/")
     input_image_file2 <- file.path(getwd(), data_raster_2, fsep = "/")
     input_header_file2 <- file.path(getwd(), rasterheader_2, fsep = "/")
+} else if (data_raster_2 == "" && data_2 == "" && raster_2 != "") {
+    input_image_file <- raster_1
+    input_image_file2 <- raster_2
 }
 
 ################################################################################
 ##                              PROCESS IMAGE                                 ##
 ################################################################################
 
-input_image_file1 <- raster::raster(input_image_file)
-stop(head(convert_raster(input_image_file1)))
+input_image_file <- raster::raster(input_image_file)
+
 ### Plotting out data
 ## Basic information for the data
 
 # r Calculate area of rasters
-area_1 <- redlistr::getArea(input_image_file1)
+area_1 <- redlistr::getArea(input_image_file)
 
-#area_2 <- redlistr::getArea(input_image_file2)
 ### Creating binary ecosystem raster
 # r Binary object from multiclass ???????????????
 #An additional parameter in `getArea` is to specify which class to count if your 
@@ -85,7 +90,7 @@ area_1 <- redlistr::getArea(input_image_file1)
 #object including only that value
 
 
-if (criteria == "A") {
+if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   ## Assessing Criterion A
   # The IUCN Red List of Ecosystems criterion A requires estimates of the magnitude of
   #change over time. This is typically calculated over a 50 year time period (past,
@@ -96,7 +101,10 @@ if (criteria == "A") {
 
   ### Plotting out data
   ## Basic information for the data
-  #Plotter les 2 data de base l'un à coté de l'autre avec cowplot et gridextra
+  png("Area_1.png")
+  plot(input_image_file, col = "grey30", legend = FALSE, main = "Canopy Distribution")
+  png("Area_2.png")
+  plot(input_image_file2, col = "grey30", legend = FALSE, main = "Canopy Distribution")
 
   area_2 <- redlistr::getArea(input_image_file2)
   ### Area change
@@ -147,31 +155,29 @@ if (criteria == "A") {
   #data. We begin by creating the minimum convex polygon enclosing all occurrences
   #of our focal ecosystem.
 
-  eoo_polygon <- redlistr::makeEOO(input_image_file1)
-  polygon_plot <- ggplot2::ggplot(eoo_polygon, ggplot2::aes(x = long, y = lat)) + 
-   ggplot2::geom_polygon(colour = "black", fill = "white") 
-### ADD THE RAW DATA ON TOP OF THE POLYGON !!!!!!!!!
-  ggplot2::ggsave("polygon.png", polygon_plot, width = 12, height = 10, units = "cm")
- 
+  eoo_polygon <- redlistr::makeEOO(input_image_file)
+  png("polygon.png")
+  plot(eoo_polygon)
+  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+
  #Calculating EOO area
   eoo_area <- redlistr::getAreaEOO(eoo_polygon)
-
   ### Subcriterion B2 (calculating AOO)
   #For subcriterion B2, we will need to calculate the number of 10x10 km grid cells
   #occupied by our distribution. We begin by creating the appopriate grid cells.
 
-  aoo_grid <- redlistr::makeAOOGrid(input_image_file1, grid.size = 10000,
-                            min.percent.rule = F)
-  aoo_plot <- ggplot2::ggplot(aoo_grid, ggplot2::aes(x = long, y = lat, group = "ID")) #+ 
-   #ggplot2::geom_polygon(colour = "black", fill = "white")
-### ADD THE RAW DATA ON TOP OF THE POLYGON !!!!!!!!!
-  ggplot2::ggsave("aoo.png", aoo_plot, width = 12, height = 10, units = "cm")
+  aoo_grid <- redlistr::makeAOOGrid(input_image_file, grid.size = 10000,
+                            min.percent.rule = FALSE)
+  
+  png("grid.png")
+  plot(aoo_grid)
+  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
 
   #Finally, we can use the created grid to calculate the AOO 
   n_aoo <- length(aoo_grid)
   tab <- as.data.frame(eoo_area)
   tab$aoo <- n_aoo
-  write.table(tab, file = "repport.txt", sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE, quote = FALSE)
+  write.table(tab, file = "repport.txt", sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE)
 
   #### Grid uncertainty functions
   #`gridUncertainty` simply moves the AOO grid systematically (with a
@@ -179,17 +185,17 @@ if (criteria == "A") {
   #AOO until additional shifts no longer produce improved results.
 
 
-  gu_results <- redlistr::gridUncertainty(input_image_file1, 10000,
+  gu_results <- redlistr::gridUncertainty(input_image_file, 100000,
                               n.AOO.improvement = 5, 
-                              min.percent.rule = F)
-### ADD THE RAW DATA ON TOP OF THE POLYGON !!!!!!!!!
-  #gu_results <- as.data.frame(gu_results)
-  #gu_plot <- ggplot2::ggplot(gu_results, ggplot2::aes(x = long, y = lat, group = "ID")) + 
-   #ggplot2::geom_polygon(colour = "black", fill = "white")
-  #ggplot2::ggsave("gu.png", gu_plot, width = 12, height = 10, units = "cm")
+                              min.percent.rule = FALSE)
+
+  gu_results <- as.data.frame(gu_results)
+  png("gu_plot.png")
+  plot(gu_results)
+  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
 
   #### One percent rule
-  #?????????????
+
 
   #In addition to the size of the grids used (which will be different for species 
   #assessments), there is also an option in the `makeAOOGrid` function to specify 
@@ -201,33 +207,30 @@ if (criteria == "A") {
   #percent rule:
 
   #r One percent grid, fig.width=7, fig.height=7}
-  AOO_grid_one_percent <- redlistr::makeAOOGrid(mangrove.2017, grid.size = 10000, 
+  aoo_grid_one_percent <- redlistr::makeAOOGrid(input_image_file, grid.size = 10000, 
                                     min.percent.rule = TRUE, percent = 1)
-  ### ADD THE RAW DATA ON TOP OF THE POLYGON !!!!!!!!!
-  #plot(AOO_grid_one_percent)
-  #plot(mangrove_2017, add = T, col = "green", legend = FALSE)
+
+  png("aoo_grid_percent.png")
+  plot(aoo_grid_one_percent)
+  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
 
 
   #There is an additional parameter - `percent` - which adjusts the threshold for
   #the AOO grids. Here, we set it to 0.1% to demonstrate its functionalities.
 
   #{r AOO Grid 0.1percent, fig.width=7, fig.height=7}
-  AOO_grid_min_percent <- redlistr::makeAOOGrid(mangrove.2017, grid.size = 10000,
+  aoo_grid_min_percent <- redlistr::makeAOOGrid(input_image_file, grid.size = 10000,
                                     min.percent.rule = TRUE, percent = 0.1)
-  #par(mfrow = c(2,2))
-  #plot(AOO.grid, main = 'AOO grid without one percent rule')
-  #plot(mangrove.2017, add = T, col = "green", legend = FALSE)
-  #plot(AOO.grid.one.percent, main = 'AOO grid with one percent rule')
-  #plot(mangrove.2017, add = T, col = "green", legend = FALSE)
-  #plot(AOO.grid.min.percent, main = 'AOO grid with one percent rule at 0.1%')
-  #plot(mangrove.2017, add = T, col = "green", legend = FALSE)
+  png("aoo_grid_min_percent.png")
+  par(mfrow = c(2, 2))
+  plot(aoo_grid, main = 'AOO grid without one percent rule')
+  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(aoo_grid_one_percent, main = 'AOO grid with one percent rule')
+  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(aoo_grid_min_percent, main = 'AOO grid with one percent rule at 0.1%')
+  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
 
-### ADD THE RAW DATA ON TOP OF THE POLYGON !!!!!!!!!
+
 }
-
-
-
-
-
 
 
