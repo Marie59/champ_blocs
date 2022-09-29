@@ -1,4 +1,4 @@
-<tool id="srs_red_list" name="Red List Index" version="@VERSION@" profile = "20.01">
+<tool id="srs_red_list" name="Red List assessement" version="@VERSION@" profile = "20.01">
     <description>from  remote sensing data</description>
     <macros>
         <import>macro.xml</import>
@@ -8,6 +8,9 @@
         <requirement type="package" version="3.3.6">r-ggplot2</requirement>
         <requirement type="package" version="1.1.1">r-cowplot</requirement>
         <requirement type="package" version="2.3">r-gridextra</requirement>
+        <requirement type="package" version="1.5_29">r-rgdal</requirement>
+        <requirement type="package" version="0.1_11">r-tiff</requirement>
+        <requirement type="package" version="1.5.2">r-fs</requirement>
     </expand>
     <command detect_errors="exit_code"><![CDATA[ 
         #import re 
@@ -18,6 +21,10 @@
           #set input_header_1_identifier = re.sub('[^\s\w\-]+[^.hdr]', '_', str($input_header_1.element_identifier))
           ln '${input_raster_1}' '${input_raster_1_identifier}' &&
           ln '${input_header_1}' '${input_header_1_identifier}' && 
+        #else if $mode.type_data.origin == 'raster':
+          #set input_raster1 = $mode.type_data.input_raster1
+          #set input_raster1_identifier = str($input_raster1.element_identifier)
+          ln '${input_raster1}' '${input_raster1_identifier}' &&
         #end if
         #if $mode.criteria == 'A' and $mode.type_data.origin == 'envi_bil':
           #set input_raster_2 = $mode.type_data.input_raster_2
@@ -26,11 +33,15 @@
           #set input_header_2_identifier = re.sub('[^\s\w\-]+[^.hdr]', '_', str($input_header_2.element_identifier)) 
           ln '${input_raster_2}' '${input_raster_2_identifier}' &&
           ln '${input_header_2}' '${input_header_2_identifier}' &&
+        #else if $mode.criteria == 'A' and $mode.type_data.origin == 'raster':
+          #set input_raster2 = $mode.type_data.input_raster2
+          #set input_raster2_identifier = str($input_raster2.element_identifier)
+          ln '${input_raster2}' '${input_raster2_identifier}' &&
         #end if 
         Rscript
             '$__tool_directory__/red_list.r'
             '$__tool_directory__/functions.r'
-            '$redlist'
+            '$grid'
             #if $mode.criteria == 'A' and $mode.type_data.origin == 'envi_bil':
               '$input_raster_1_identifier' 
               '$input_header_1_identifier'
@@ -56,8 +67,8 @@
               ''
               ''
               ''
-              'input_raster1'
-              'input_raster2'
+              '$input_raster1_identifier'
+              '$input_raster2_identifier'
             #else if $mode.criteria == 'B' and $mode.type_data.origin == 'envi_bil':
               '$input_raster_1_identifier' 
               '$input_header_1_identifier'
@@ -83,7 +94,7 @@
               ''
               ''
               ''
-              'input_raster1'
+              '$input_raster1_identifier'
               ''
             #end if
             '$output_rli'
@@ -91,10 +102,7 @@
         ]]>
     </command>
     <inputs>
-        <param name="redlist" type="select" label="Which kind of red list assesment do you want to do ?" display="radio">
-            <option value="RLE">Red List Ecosystem</option>
-            <option value="RLS">Red List Species</option>
-        </param>
+        <param name="grid" type="text" label="Write down the grid size yo want to use for your assement" help="This parameter will vary if you do a Red List Ecosystem or Threatened Species (RLE or RLTS) assesament. For instance for 10x10km grid write 10000. For a RLE you should write 10000 (100km2) and for a RLTS 400 (4km2)."/>
         <conditional name="mode">
             <param name="criteria" type="select" label="Which one of those criteria do you want to compute ?" display="radio" help="Criterion A temporal assesment and B spatial assesment">
                 <option value="A">Criterion A</option>
@@ -118,8 +126,8 @@
                         <param name="input_header_2" type="data" format="hdr" label="Input header 2"/>
                     </when>
                     <when value="raster">
-                        <param name="input1" type="data" format="data" label="Input data 1"/>
-                        <param name="input2" type="data" format="data" label="Input data 2"/>
+                        <param name="input_raster1" type="data" format="tiff" label="Input data 1"/>
+                        <param name="input_raster2" type="data" format="tiff" label="Input data 2"/>
                     </when>
                 </conditional>
             </when>
@@ -128,7 +136,7 @@
                     <param name="origin" type="select" label="In which format are your data ?">
                         <option value="zipper">The data you are using are in a zip folder Reflectance</option>
                         <option value="envi_bil">Your already have the files in ENVI BIL format</option>
-                        <option value="raster">You have your data in a raster format : tif, ...</option>
+                        <option value="raster">You have your data in a raster format : tif, shp and kml</option>
                     </param>
                     <when value="zipper">
                         <param name="input1" type="data" format="zip" multiple="true" label="Input data 1"/>
@@ -138,43 +146,47 @@
                         <param name="input_header_1" type="data" format="hdr" label="Input header 1"/>
                     </when>
                     <when value="raster">
-                        <param name="input1" type="data" format="data" label="Input data 1"/>
+                        <param name="input_raster1" type="data" format="tiff" label="Input data 1"/>
                     </when>
                 </conditional>
             </when>
         </conditional>
     </inputs>
     <outputs>
-        <data name="output_rli" from_work_dir="repport.txt" format="txt" label="Red list criterion ${mode.criteria}"/>
+        <data name="output_rli" from_work_dir="report.txt" format="txt" label="Red list criterion ${mode.criteria} report"/>
         <collection type="list" name="plots" label="Criterion ${mode.criteria} plot">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
     </outputs>
     <tests>
         <test>
-            <param name="origin" value="envi_bil"/>
-            <param name="input_raster" value="S2A_Subset"/>
-            <param name="input_header" value="S2A_Subset.hdr"/>
-            <param name="type" value="all"/>
+            <param name="grid" value="10000"/>
+            <param name="criteria" value="A"/>
+            <param name="origin" value="raster"/>
+            <param name="input_raster1" value="example_distribution_2000.tif"/>
+            <param name="input_raster2" value="example_distribution_2017.tif"/>
             <output name="output_rli">
                 <assert_contents>
-                    <has_n_columns n="3"/>
+                    <has_n_columns n="1"/>
                 </assert_contents>
             </output>
-            <output_collection name="plots" type="list" count="3"/>
+            <output_collection name="plots" type="list" count="2"/>
         </test>
     </tests>
     <help><![CDATA[
-========================================================================
-Calculate cloud mask from envi bil format
-========================================================================
+=================================================================
+Conduct Red List assessement according to IUCN redlist guidelines
+=================================================================
 
 
 **What it does**
 
-
+This tool assess the spatial criteria of the **IUCN Red List of Ecosystems** (http://iucnrle.org/). These criteria assess the change in the extent of an ecosystem over time (Criterion A) and properties of the geographic distribution size (Criterion B). Both of these criteria require the use of maps of ecosystem distributions.
 
 **Input description**
+
+- The cells' size : a minimum threshold before a cell is deemed occupied. For the purposes of red listing, ecosystem cells are 100km² and species cells are 4km².
+
 
 It expects an image file as input, with a specific data format. ENVI HDR image with BIL interleave required.
 The image is an ENVI raster including :
@@ -197,8 +209,22 @@ In order to get such input we advise to use the tool preprocessing sentinel 2 da
 
 **Output**
 
+- Multiple png graph 
+- 1 text file 
+
+**Criterion A**
+
+At two time points, this tool computes three rate of change statistics to enable users to extrapolate estimates from limited data to the time frames required by Red List guidelines. The rates are absolute rate of decline (ARD), proportional rate of decline (PRD), and annual rate of change (ARC) 
+
+The functions are statistical methods for estimating decline using data at only two time points.
+
+**Criterion B**
+
+  This tool's part utilizes measures of the geographic distribution of an ecosystem type to identify ecosystems that are at risk from catastrophic disturbances. This is done using two standardized metrics: the extent of occurrence (EOO) and  the area of occupancy (AOO)
 
 
     ]]>    </help>
-        <expand macro="SRS_BDMRref"/>
+    <citations>
+        <citation type="doi">doi:10.1111/ecog.04143</citation>
+    </citations>
 </tool>

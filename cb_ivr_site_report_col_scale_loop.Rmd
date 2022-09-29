@@ -158,7 +158,7 @@ Légende des figures. Evolution temporelle de la valeur mediane de l'IVR au site
 Ces valeurs propres au site `r unique(df1$Site.bis)` peuvent être resituées par rapport aux autres valeurs médianes de l'IVR obtenues pour les vingt-trois autres sites suivis sur la période 2014-2017 à l’échelle de la façade Manche-Atlantique française (points gris). Tous sites confondus, la pression de pêche à pied est très variable dans le temps et dans l'espace, ce qui se traduit par une distribution des valeurs médianes de l'IVR occupant toute la fenêtre graphique. 
 
 
-# Continuité du suivi du site `r unique(df1$Site.bis)`
+# Continuité du suivi du site `r unique(df1$Site_bis)`
 
 Ce bref rapport présente l'évolution de la valeur de l'indice IVR au site `r unique(df1$Site.bis)`, suivi de `r min(unique(df1$Annee), na.rm = T)` à `r max(unique(df1$Annee), na.rm = T)`, et la resitue par rapport aux valeurs IVR des vingt-trois autres champs de blocs suivis  de 2014 à 2017 sur la façade Manche-Atlantique française. Il illustre l'évolution dans le temps de la pression de la pêche à pied, et rappelle la nécessité de continuer d'en évaluer l'impact, que les observations récoltées traduisent du maintien d'une faible pression de pêche, d'une diminution de cette dernière au fil du temps, au plus préoccupant d'un retournement dommageable d'un grand nombre de blocs.
 

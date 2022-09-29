@@ -32,6 +32,7 @@ if (length(args) < 1) {
     input_data2 <- args[2]
     fiche_val <- args[3]
     fiche_term <- args[4]
+    #choice <- as.character(args[5])
 }
 
 ## load ivr data

@@ -37,6 +37,10 @@
         <param name="input_data2" type="data" format="data" label="Input data finish"/>
         <param name="fiche_val" type="data" format="data" label="Input data field valid"/>
         <param name="fiche_term" type="data" format="data" label="Input data field finish"/>
+        <!--<param name="choice" type="select" label="In which format do you want your final reports ?">
+            <option value="pdf">in PDF</option>
+            <option value="docx">in word</option>
+        </param>-->
     </inputs>
     <outputs>
         <data name="output_ivr" from_work_dir="Valeurs_stat.tabular" format="tabular" label="IVR"/>
@@ -46,6 +50,9 @@
         <collection type="list" name="output_rds" label="IVR .RDS data">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.RDS" visible="false" format="Rdata"/>
         </collection>
+        <!--<collection type="list" name="output_report" label="Reports">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.docx" visible="false" format="pdf, text"/>
+        </collection>-->
     </outputs>
     <tests>
         <test>

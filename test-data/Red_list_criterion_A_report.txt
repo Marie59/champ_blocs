@@ -1,0 +1,13 @@
+"x"
+"1" "
+
+Area loss between your 2 data 1.3221 Km2	Rates of decline 1.3221	Extrapolation 2050	Predicted area loss -25.881077951404%"
+"2" "
+
+Area loss between your 2 data 1.3221 Km2	Rates of decline 0.077770588235294	Extrapolation 9.7671705882353	Predicted area loss -25.881077951404%"
+"3" "
+
+Area loss between your 2 data 1.3221 Km2	Rates of decline 0.597208235706315	Extrapolation 10.1214576381901	Predicted area loss -25.881077951404%"
+"4" "
+
+Area loss between your 2 data 1.3221 Km2	Rates of decline -0.59899865600756	Extrapolation 10.1214576381901	Predicted area loss -25.881077951404%"

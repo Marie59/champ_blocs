@@ -18,7 +18,7 @@ if (length(args) < 1) {
     stop("This tool needs at least 1 argument")
 }else {
     source(args[1])
-    redlist_type <- as.character(args[2])
+    grid <- as.numeric(args[2])
     data_raster_1 <- args[3]
     rasterheader_1 <- args[4]
     data_raster_2 <- args[5]
@@ -68,8 +68,14 @@ if (data_raster_2 == "" && data_2 != "" ) {
 ################################################################################
 ##                              PROCESS IMAGE                                 ##
 ################################################################################
+if (fs::path_ext(input_image_file) == "shp" || fs::path_ext(input_image_file) == "kml") {
+  input_image_file <- rgdal::readOGR(input_image_file)
+}else {
+  input_image_file <- raster::raster(input_image_file)
+}
 
-input_image_file <- raster::raster(input_image_file)
+#system.file("extdata", "example_distribution_2000.tif", 
+ #                                   package = "redlistr"))
 
 ### Plotting out data
 ## Basic information for the data
@@ -78,7 +84,7 @@ input_image_file <- raster::raster(input_image_file)
 area_1 <- redlistr::getArea(input_image_file)
 
 ### Creating binary ecosystem raster
-# r Binary object from multiclass ???????????????
+
 #An additional parameter in `getArea` is to specify which class to count if your 
 #raster has more than one value (multiple ecosystem data stored within a single
 #file). However, for further functions, it may be wise to convert your raster
@@ -97,7 +103,13 @@ if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   #present or future) or against a historical baseline ([Bland et al., 2016](https://portals.iucn.org/library/sites/library/files/documents/2016-010.pdf)).
   #The first step towards acheiving this change estimate over a fixed time frame is
   #to assess the amount of change observed in your data.
-  input_image_file2 <- raster::raster(input_image_file2)
+  if (fs::path_ext(input_image_file2) == "shp" || fs::path_ext(input_image_file2) == "kml") {
+    input_image_file2 <- rgdal::readOGR(input_image_file2)
+  }else {
+    input_image_file2 <- raster::raster(input_image_file2)
+  }
+#system.file("extdata", "example_distribution_2017.tif", 
+ #                                   package = "redlistr"))
 
   ### Plotting out data
   ## Basic information for the data
@@ -110,12 +122,12 @@ if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   ### Area change
   area_lost <- redlistr::getAreaLoss(area_1, area_2)
   
-  area_text <- paste0("Area lost between your 2 data ", area_lost, "Km2")
+  area_text <- paste0("Area loss between your 2 data ", area_lost, " Km2")
   ### Rate of change
   #These rates of decline allow the use of two or more data points to extrapolate
   #to the full 50 year timeframe required in an assessment.
 
-  decline_stats <- redlistr::getDeclineStats(area_1, area_1, 2000, 2017, 
+  decline_stats <- redlistr::getDeclineStats(area_1, area_2, 2000, 2017, 
                                  methods = c("ARD", "PRD", "ARC"))
   
   decline_text <- paste0("Rates of decline ", decline_stats)
@@ -135,12 +147,12 @@ if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   #period), and the percent loss of area is:
   predicted_percent_loss <- (extrapolated_area$A.PRD.t3 - area_1) / area_1 * 100
 
-  pploss_text <- paste0("the predicted percent loss of area is ", predicted_percent_loss, "%")
+  pploss_text <- paste0("Predicted area loss ", predicted_percent_loss, "%")
 
   ##write tinto a text file those different results as a repport
-  repport <- paste0("Repport on Criterion A", "\t", area_text, "\t", decline_text, "\t", extrapo_text, "\t", pploss_text)
+  report <- paste0("\n\n", area_text, "\t", decline_text, "\t", extrapo_text, "\t", pploss_text)
   
-  write.table(repport, "repport.txt")
+  write.table(report, "report.txt")
   
 
 }else {
@@ -158,7 +170,7 @@ if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   eoo_polygon <- redlistr::makeEOO(input_image_file)
   png("polygon.png")
   plot(eoo_polygon)
-  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(input_image_file, add = TRUE, col = "dark green", legend = FALSE)
 
  #Calculating EOO area
   eoo_area <- redlistr::getAreaEOO(eoo_polygon)
@@ -166,18 +178,18 @@ if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   #For subcriterion B2, we will need to calculate the number of 10x10 km grid cells
   #occupied by our distribution. We begin by creating the appopriate grid cells.
 
-  aoo_grid <- redlistr::makeAOOGrid(input_image_file, grid.size = 10000,
+  aoo_grid <- redlistr::makeAOOGrid(input_image_file, grid.size = grid,
                             min.percent.rule = FALSE)
   
   png("grid.png")
   plot(aoo_grid)
-  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(input_image_file, add = TRUE, col = "dark green", legend = FALSE)
 
   #Finally, we can use the created grid to calculate the AOO 
   n_aoo <- length(aoo_grid)
   tab <- as.data.frame(eoo_area)
   tab$aoo <- n_aoo
-  write.table(tab, file = "repport.txt", sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE)
+  write.table(tab, file = "report.txt", sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE)
 
   #### Grid uncertainty functions
   #`gridUncertainty` simply moves the AOO grid systematically (with a
@@ -185,14 +197,14 @@ if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   #AOO until additional shifts no longer produce improved results.
 
 
-  gu_results <- redlistr::gridUncertainty(input_image_file, 100000,
+  gu_results <- redlistr::gridUncertainty(input_image_file, grid * 10, #!!! not sure why and for what need to come back here!!!!
                               n.AOO.improvement = 5, 
                               min.percent.rule = FALSE)
 
   gu_results <- as.data.frame(gu_results)
   png("gu_plot.png")
   plot(gu_results)
-  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(input_image_file, add = TRUE, col = "dark green", legend = FALSE)
 
   #### One percent rule
 
@@ -207,30 +219,27 @@ if (data_raster_2 != "" || data_2 != "" || raster_2 != "") {
   #percent rule:
 
   #r One percent grid, fig.width=7, fig.height=7}
-  aoo_grid_one_percent <- redlistr::makeAOOGrid(input_image_file, grid.size = 10000, 
+  aoo_grid_one_percent <- redlistr::makeAOOGrid(input_image_file, grid.size = grid, 
                                     min.percent.rule = TRUE, percent = 1)
 
   png("aoo_grid_percent.png")
   plot(aoo_grid_one_percent)
-  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(input_image_file, add = TRUE, col = "dark green", legend = FALSE)
 
 
   #There is an additional parameter - `percent` - which adjusts the threshold for
   #the AOO grids. Here, we set it to 0.1% to demonstrate its functionalities.
 
   #{r AOO Grid 0.1percent, fig.width=7, fig.height=7}
-  aoo_grid_min_percent <- redlistr::makeAOOGrid(input_image_file, grid.size = 10000,
+  aoo_grid_min_percent <- redlistr::makeAOOGrid(input_image_file, grid.size = grid,
                                     min.percent.rule = TRUE, percent = 0.1)
   png("aoo_grid_min_percent.png")
   par(mfrow = c(2, 2))
   plot(aoo_grid, main = 'AOO grid without one percent rule')
-  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(input_image_file, add = TRUE, col = "dark green", legend = FALSE)
   plot(aoo_grid_one_percent, main = 'AOO grid with one percent rule')
-  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
+  plot(input_image_file, add = TRUE, col = "dark green", legend = FALSE)
   plot(aoo_grid_min_percent, main = 'AOO grid with one percent rule at 0.1%')
-  plot(input_image_file, add = TRUE, col = "green", legend = FALSE)
-
+  plot(input_image_file, add = TRUE, col = "dark green", legend = FALSE)
 
 }
-
-
