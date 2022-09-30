@@ -11,6 +11,7 @@
         <requirement type="package" version="1.5_29">r-rgdal</requirement>
         <requirement type="package" version="0.1_11">r-tiff</requirement>
         <requirement type="package" version="1.5.2">r-fs</requirement>
+        <requirement type="package" version="1.0_7">r-sf</requirement>
     </expand>
     <command detect_errors="exit_code"><![CDATA[ 
         #import re 
@@ -126,8 +127,8 @@
                         <param name="input_header_2" type="data" format="hdr" label="Input header 2"/>
                     </when>
                     <when value="raster">
-                        <param name="input_raster1" type="data" format="tiff" label="Input data 1"/>
-                        <param name="input_raster2" type="data" format="tiff" label="Input data 2"/>
+                        <param name="input_raster1" type="data" format="tiff, shp, kml" label="Input data 1"/>
+                        <param name="input_raster2" type="data" format="tiff, shp, kml" label="Input data 2"/>
                     </when>
                 </conditional>
             </when>
@@ -146,7 +147,7 @@
                         <param name="input_header_1" type="data" format="hdr" label="Input header 1"/>
                     </when>
                     <when value="raster">
-                        <param name="input_raster1" type="data" format="tiff" label="Input data 1"/>
+                        <param name="input_raster1" type="data" format="tiff, shp, xml" label="Input data 1"/>
                     </when>
                 </conditional>
             </when>

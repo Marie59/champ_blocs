@@ -1,7 +1,7 @@
 library("rmarkdown")
 
-df <- ivr_test
-df_full <- ivr_test_full
+df <- indic
+df_full <- indic_full
 
 slices <- unique(df$Site)[!is.na(unique(df$Site))]
 

@@ -1,5 +1,5 @@
 <tool id="cb_qecb" name="QECB and ecology" version="0.0.0" profile = "20.01">
-    <description>things</description>
+    <description>indicator</description>
     <requirements>
         <requirement type="package" version="1.0.10">r-dplyr</requirement>
         <requirement type="package" version="1.2.1">r-tidyr</requirement>
@@ -12,6 +12,8 @@
         <requirement type="package" version="1.1.1">r-cowplot</requirement>
         <!--<requirement type="package" version="">r-hablar</requirement>-->
         <requirement type="package" version="2.16">r-rmarkdown</requirement>
+        <requirement type="package" version="0.2.4">r-officedown</requirement>
+        <requirement type="package" version="1.40">r-knitr</requirement>
         <requirement type="package" version="2.6_2">r-vegan</requirement>
         <requirement type="package" version="1.4.4">r-reshape2</requirement>
         <requirement type="package" version="3.3.6">r-ggplot2</requirement>
@@ -28,8 +30,11 @@
             '$input_data2'
             '$fiche_val'
             '$fiche_term'
+            '$__tool_directory__/cb_qecb_site_report_col_scale_loop.Rmd'
+            '$__tool_directory__/loop_col_scale.r'
             '$output_qecb'
             '$plots'
+            '$output_rds'
         ]]>
     </command>
     <inputs>
@@ -39,51 +44,68 @@
         <param name="fiche_term" type="data" format="data" label="Input data field finish"/>
     </inputs>
     <outputs>
-        <data name="output_qecb" from_work_dir="Valeurs_stat.tabular" format="txt" label="QECB"/>
+        <data name="output_qecb" from_work_dir="Valeurs_stat.tabular" format="tabular" label="QECB"/>
         <collection type="list" name="plots" label="QECB plot">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+        <collection type="list" name="output_rds" label="QECB .RDS data">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.RDS" visible="false" format="Rdata"/>
         </collection>
     </outputs>
     <tests>
         <test>
-            <param name="input_data" value=""/>
-            <param name="input_data2" value=""/>
-            <param name="fiche_val" value=""/>
-            <param name="fiche_term" value=""/>
+            <param name="input_data" value="champbloc_qecb_val.csv"/>
+            <param name="input_data2" value="champbloc_qecb.csv"/>
+            <param name="fiche_val" value="ficheterrain_val.csv"/>
+            <param name="fiche_term" value="ficheterrain.csv"/>
             <output name="output_qecb">
                 <assert_contents>
-                    <has_n_columns n="3"/>
+                    <has_n_columns n="14"/>
                 </assert_contents>
             </output>
-            <output_collection name="plots" type="list" count="3"/>
+            <output_collection name="plots" type="list" count="2"/>
+            <output_collection name="output_rds" type="list" count="5"/>
         </test>
     </tests>
     <help><![CDATA[
-========================================================================
-
-========================================================================
+=================
+QECB indicator
+=================
 
 
 **What it does**
 
-
+Calculates the QECB indicator
 
 **Input description**
 
+Four input files in csv format.
 
++--------------+----------+----------------+--------------+
+|      CSV     |    CSV   |      CSV       |      CSV     |
++==============+==========+================+==============+
+|   validate   | finish   | field validate | field finish |
++--------------+----------+----------------+--------------+
+|      ...     |    ...   |      ...       |      ...     |
++--------------+----------+----------------+--------------+
 
-+--------------+----------+
-|      BIL     | ENVI HDR |
-+==============+==========+
-| raster stack | Metadata |
-+--------------+----------+
-|      ...     |    ...   |
-+--------------+----------+
 
 **Output**
+
+- .RDS files 5 of them for the qecb
+- 1 tabilar file for the last cacul on qecb
+- Multiple png plots one for each of the locations
 
 
 
     ]]>    </help>
-
+    <citations>
+        <citation type="bibtex">
+            @Manual{,
+            title = {Les habitats rocheux intertidaux sous l’influence d’activités anthropiques : structure, dynamique et enjeux de conservation. Sciences agricoles},
+            author = {Bernard M.},
+            year = {2012},
+            note = {https://tel.archives-ouvertes.fr/tel-00720611/}
+        </citation>
+    </citations>
 </tool>

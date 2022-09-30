@@ -17,8 +17,8 @@ knitr::opts_chunk$set(
   , warning = FALSE
   )
 
-df <- ivr_test
-df_full <- ivr_test_full
+df <- indic
+df_full <- indic_full
 
 df1 <- df %>% dplyr::filter(df$Site == v)
 df1 <- droplevels(df1)

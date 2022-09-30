@@ -68,6 +68,7 @@ if (data_raster_2 == "" && data_2 != "" ) {
 ################################################################################
 ##                              PROCESS IMAGE                                 ##
 ################################################################################
+
 if (fs::path_ext(input_image_file) == "shp" || fs::path_ext(input_image_file) == "kml") {
   input_image_file <- rgdal::readOGR(input_image_file)
 }else {
