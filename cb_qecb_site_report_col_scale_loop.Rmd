@@ -1,13 +1,16 @@
 ---
-params:
-   Site: v
 title: "Indice de Qualité Écologique des Champs de Blocs (QECB) - suivi 2014-2017"
 #author: "Jonathan Richir, Christian Kerbiriou, Pauline Poisson, Maud Bernard, Juliette Delavenne, Isabelle Le Viol"
 #date: "21 Juin 2021"
 output: 
   #word_document:
     #reference_docx: word_template.docx
+    #fig_width: 7
+    #fig_height: 5
   officedown::rdocx_document
+  #word_document: default
+  #html_document: default
+#always_allow_html: true # to be able to knit the kableExtra table
 ---
   
 ```{r setup, include = FALSE}
@@ -24,16 +27,20 @@ library(kableExtra)
 library(officer)
 library(officedown)
 
-df <- indic 
-df.full <- indic_full 
+df = indic 
+df.full = indic_full 
 
 df[,c("qecb.moy", "qecb.et", "qecb.med", "qecb.min", "qecb.max")] <- apply(df[, c("qecb.moy", "qecb.et", "qecb.med", "qecb.min", "qecb.max")], 2, function(x) {ifelse(x %in% c("Inf", "NaN"), NA, x)})
 df.full$QEBM.2 <- ifelse(df.full$QEBM.2 %in% c("-Inf", "NaN"), NA, df.full$QEBM.2)
   
-df1 <- df %>% filter(Site==v)
-df1 <- droplevels(df1)
+df1 = df %>% filter(Site==v)
+df1 = droplevels(df1)
 
 ```
+
+---
+title: "Indice de Qualité Écologique des Champs de Blocs (QECB) - suivi 2014-`r ifelse(max(df1$Annee) <= 2017, 2017, max(df1$Annee))`"
+---
 
 # Contexte
 
