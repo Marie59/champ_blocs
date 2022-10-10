@@ -47,16 +47,13 @@
     </outputs>
     <tests>
         <test>
-            <param name="input_data" value="champbloc_qecb_val.csv"/>
-            <param name="input_data2" value="champbloc_qecb.csv"/>
-            <param name="fiche_val" value="ficheterrain_val.csv"/>
-            <param name="fiche_term" value="ficheterrain.csv"/>
-            <output name="output_qecb">
+            <param name="input_data" value="qecbnew.Rdata"/>
+            <output name="output_eco">
                 <assert_contents>
-                    <has_n_columns n="14"/>
+                    <has_n_columns n="13"/>
                 </assert_contents>
             </output>
-            <output_collection name="plots" type="list" count="2"/>
+            <output_collection name="plots" type="list" count="3"/>
             <output_collection name="output_rds" type="list" count="5"/>
         </test>
     </tests>
