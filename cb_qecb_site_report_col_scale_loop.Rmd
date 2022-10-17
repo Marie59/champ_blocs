@@ -15,17 +15,17 @@ output:
   
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  echo=F
-  , message=F
-  , warning=F
+  echo = FALSE
+  , message = FALSE
+  , warning = FALSE
   )
 
-df = indic 
-df_full = indic_full 
+df <- indic
+df_full <- indic_full
 
 df[, c("qecb.moy", "qecb.et", "qecb.med", "qecb.min", "qecb.max")] <- apply(df[, c("qecb.moy", "qecb.et", "qecb.med", "qecb.min", "qecb.max")], 2, function(x) {ifelse(x %in% c("Inf", "NaN"), NA, x)})
-df_full$QEBM.2 <- ifelse(df_full$QEBM.2 %in% c("-Inf", "NaN"), NA, df_full$QEBM.2)
-  
+df_full$qebm_2 <- ifelse(df_full$qebm_2 %in% c("-Inf", "NaN"), NA, df_full$qebm_2)
+
 df1 <- df %>% dplyr::filter(Site == v)
 df1 <- droplevels(df1)
 
@@ -75,49 +75,38 @@ Dans leur version originale, les limites de classes étaient obtenues en découp
 
 ```{r}
 
-qecb.scale <- data.frame(matrix(NA, nrow = 5, ncol = 3))
-colnames(qecb.scale) <- c("Classe de l'indice", "Limites équidistantes",  "Signification")
+qecb_scale <- data.frame(matrix(NA, nrow = 5, ncol = 3))
+colnames(qecb_scale) <- c("Classe de l'indice", "Limites équidistantes",  "Signification")
 
-qecb.scale$`Classe de l'indice` <- c("1", "2", "3", "4", "5")
-qecb.scale$`Limites équidistantes` <- c("-360 ≤ QECB < -216", "-216 ≤ QECB < -72", "-72 ≤ QECB < +72", "+72 ≤ QECB < +216", "+216 ≤ QECB = +360")
-qecb.scale$Signification <- c("Très mauvais état écologique", "Mauvais état écologique", "État écologique moyen", "Bon état écologique", "Très bon état écologique")
+qecb_scale$`Classe de l'indice` <- c("1", "2", "3", "4", "5")
+qecb_scale$`Limites équidistantes` <- c("-360 ≤ QECB < -216", "-216 ≤ QECB < -72", "-72 ≤ QECB < +72", "+72 ≤ QECB < +216", "+216 ≤ QECB = +360")
+qecb_scale$Signification <- c("Très mauvais état écologique", "Mauvais état écologique", "État écologique moyen", "Bon état écologique", "Très bon état écologique")
 
-#qecb.scale
+#qecb_scale
 
 ```
 
 ```{r}
 
-
-#library(kableExtra) # kableExtra doesn't work for word output
-#qecb.scale %>%
-#  kbl() %>%
-#  kable_classic(full_width = T, html_font = "Cambria") #%>%
-  #row_spec(1, row = 1, background = "red") %>%
-  #row_spec(2, row = 2, background = "orange") %>%
-  #row_spec(3, row = 3, background = "yellow") %>%
-  #row_spec(4, row = 4, background = "green") %>%
-  #row_spec(5, row = 5, background = "blue")
-
-qu_tbl <- qecb.scale %>%
+qu_tbl <- qecb_scale %>%
   flextable::flextable()
 
 flextable::autofit(qu_tbl)
-  
+
 ```
 Légende de la table. Classes de l'indice de Qualité Ecologique des Champs de Blocs, dont les limites de classes couvrent 5 plages de valeurs identiques de 144 unités.
 
 ```{r}
 
-dt_ <- dplyr::filter(df_full, QEBM.2 >= -360)
-dt_ <- dplyr::filter(dt_, QEBM.2 <= 360) 
-dt_bis <- dplyr::filter(dt_, QEBM.2 >= quantile(dt_$QEBM.2, c(0.05), na.rm = TRUE))
-dt_bis <- dplyr::filter(dt_bis, QEBM.2 <= quantile(dt_bis$QEBM.2, c(0.95), na.rm = TRUE))
+dt_ <- dplyr::filter(df_full, qebm_2 >= -360)
+dt_ <- dplyr::filter(dt_, qebm_2 <= 360)
+dt_bis <- dplyr::filter(dt_, qebm_2 >= quantile(dt_$qebm_2, c(0.05), na.rm = TRUE))
+dt_bis <- dplyr::filter(dt_bis, qebm_2 <= quantile(dt_bis$qebm_2, c(0.95), na.rm = TRUE))
 
-one <- round(mean(unlist(dplyr::filter(dt_bis, QEBM.2 <= quantile(dt_bis$QEBM.2, 0.25, na.rm = TRUE))["QEBM.2"])), digits = 0)
-two <- round(mean(unlist(dplyr::filter(dt_bis, QEBM.2 > quantile(dt_bis$QEBM.2, 0.25, na.rm = TRUE) & QEBM.2 <= quantile(dt_bis$QEBM.2, 0.5, na.rm = TRUE))["QEBM.2"])), digits = 0)
-three <- round(mean(unlist(dplyr::filter(dt_bis, QEBM.2 > quantile(dt_bis$QEBM.2, 0.5, na.rm = TRUE) & QEBM.2 <= quantile(dt_bis$QEBM.2, 0.75, na.rm = TRUE))["QEBM.2"])), digits = 0)
-four <- round(mean(unlist(dplyr::filter(dt_bis, QEBM.2 > quantile(dt_bis$QEBM.2, 0.75, na.rm = TRUE))["QEBM.2"])), digits = 0)
+one <- round(mean(unlist(dplyr::filter(dt_bis, qebm_2 <= quantile(dt_bis$qebm_2, 0.25, na.rm = TRUE))["qebm_2"])), digits = 0)
+two <- round(mean(unlist(dplyr::filter(dt_bis, qebm_2 > quantile(dt_bis$qebm_2, 0.25, na.rm = TRUE) & qebm_2 <= quantile(dt_bis$qebm_2, 0.5, na.rm = TRUE))["qebm_2"])), digits = 0)
+three <- round(mean(unlist(dplyr::filter(dt_bis, qebm_2 > quantile(dt_bis$qebm_2, 0.5, na.rm = TRUE) & qebm_2 <= quantile(dt_bis$qebm_2, 0.75, na.rm = TRUE))["qebm_2"])), digits = 0)
+four <- round(mean(unlist(dplyr::filter(dt_bis, qebm_2 > quantile(dt_bis$qebm_2, 0.75, na.rm = TRUE))["qebm_2"])), digits = 0)
 
 ```
 
@@ -125,40 +114,25 @@ Les limites entre classes peuvent être définies à partir de la méthode des q
 
 ```{r}
 
-qecb.scale <- data.frame(matrix(NA, nrow = 5, ncol = 3))
-colnames(qecb.scale) <- c("Classe de l'indice", "Limites quantiles",  "Signification")
+qecb_scale <- data.frame(matrix(NA, nrow = 5, ncol = 3))
+colnames(qecb_scale) <- c("Classe de l'indice", "Limites quantiles",  "Signification")
 
-qecb.scale$`Classe de l'indice` <- c("1", "2", "3", "4", "5")
-qecb.scale$`Limites quantiles` <- c(
+qecb_scale$`Classe de l'indice` <- c("1", "2", "3", "4", "5")
+qecb_scale$`Limites quantiles` <- c(
   paste0("-360 = QECB < ", as.character(one)),
   paste0(as.character(one), " = QECB < +", as.character(two)),
   paste0("+", as.character(two), " = QECB < +", as.character(three)),
   paste0("+", as.character(three), " = QECB < +", as.character(four)),
-  paste0("+", as.character(four), " = QECB = +360")) 
+  paste0("+", as.character(four), " = QECB = +360"))
 
-qecb.scale$Signification <- c("Très mauvais état écologique", "Mauvais état écologique", "État écologique moyen", "Bon état écologique", "Très bon état écologique")
-
-#qecb.scale
+qecb_scale$Signification <- c("Très mauvais état écologique", "Mauvais état écologique", "État écologique moyen", "Bon état écologique", "Très bon état écologique")
 
 ```
 
 ```{r}
 
-library(dplyr)
-
-#library(kableExtra) # kableExtra doesn't work for word output
-#qecb.scale %>%
-#  kbl() %>%
-#  kable_classic(full_width = T, html_font = "Cambria") %>%
-#  row_spec(1, row = 1, background = "red") %>%
-#  row_spec(2, row = 2, background = "orange") %>%
-#  row_spec(3, row = 3, background = "yellow") %>%
-#  row_spec(4, row = 4, background = "olivedrab") %>%
-#  row_spec(5, row = 5, background = "blue")
-
-library(flextable)
-qecb.scale %>%
-  flextable::flextable() -> qu_tbl
+qu_tbl <- qecb_scale %>%
+  flextable::flextable()
 qu_tbl <- flextable::bg(qu_tbl, i = 1, bg = "red")
 qu_tbl <- flextable::bg(qu_tbl, i = 2, bg = "orange")
 qu_tbl <- flextable::bg(qu_tbl, i = 3, bg = "yellow")
@@ -177,31 +151,31 @@ Les mesures des variables biotiques et abiotiques qui répondent à la perturbat
 
 ```{r}
 
-txt. <- data.frame(matrix(NA, nrow = 2, ncol = 1))
-colnames(txt.) <- "res."
-txt.[1,1] <- ifelse(min(df1$qecb.min, na.rm = TRUE) < -360, " (le minimum est en dehors des bornes théoriques)", "")
-txt.[2,1] <- ifelse(max(df1$qecb.max, na.rm = TRUE) > 360, " (le maximum est en dehors des bornes théoriques)", "")
+txt_ <- data.frame(matrix(NA, nrow = 2, ncol = 1))
+colnames(txt_) <- "res."
+txt_[1, 1] <- ifelse(min(df1$qecb.min, na.rm = TRUE) < -360, " (le minimum est en dehors des bornes théoriques)", "")
+txt_[2, 1] <- ifelse(max(df1$qecb.max, na.rm = TRUE) > 360, " (le maximum est en dehors des bornes théoriques)", "")
 
 ```
 
-Les valeurs médianes du QECB au site `r unique(df1$Site.bis)` (points noirs) sont comprises entre un minimum égal à `r round(min(df1$qecb.med, na.rm = TRUE), digits = 0)` et un maximum égal à `r round(max(df1$qecb.med, na.rm = TRUE), digits = 0)`. Les valeurs individuelles, par bloc mobile (barres), sont quant à elles comprises entre un minimum égal à `r round(min(df1$qecb.min, na.rm = TRUE), digits = 0)``r txt.[1,1]` et un maximum égal à `r round(max(df1$qecb.max, na.rm = TRUE), digits = 0)``r txt.[2,1]`. Ces valeurs propres au site `r unique(df1$Site.bis)` peuvent être resituées par rapport aux autres valeurs médianes du QECB obtenues pour les vingt-trois autres sites suivis sur la période 2014-`r ifelse(max(df1$Annee) <= 2017, 2017, max(df1$Annee))` à l’échelle de la façade Manche-Atlantique française (points gris). Tous sites confondus, les valeurs médianes de cet indice occupent une fenêtre plus restreinte que celle entre leurs extrema théoriques, centrées sur la valeur de 6.
+Les valeurs médianes du QECB au site `r unique(df1$Site.bis)` (points noirs) sont comprises entre un minimum égal à `r round(min(df1$qecb.med, na.rm = TRUE), digits = 0)` et un maximum égal à `r round(max(df1$qecb.med, na.rm = TRUE), digits = 0)`. Les valeurs individuelles, par bloc mobile (barres), sont quant à elles comprises entre un minimum égal à `r round(min(df1$qecb.min, na.rm = TRUE), digits = 0)``r txt_[1,1]` et un maximum égal à `r round(max(df1$qecb.max, na.rm = TRUE), digits = 0)``r txt_[2,1]`. Ces valeurs propres au site `r unique(df1$Site.bis)` peuvent être resituées par rapport aux autres valeurs médianes du QECB obtenues pour les vingt-trois autres sites suivis sur la période 2014-`r ifelse(max(df1$Annee) <= 2017, 2017, max(df1$Annee))` à l’échelle de la façade Manche-Atlantique française (points gris). Tous sites confondus, les valeurs médianes de cet indice occupent une fenêtre plus restreinte que celle entre leurs extrema théoriques, centrées sur la valeur de 6.
 
 ```{r}
 
 par(mar = c(5, 5, 4, 2) + 0.1)
 
   xmin_ <- as.Date(ifelse(min(df1$Annee) >= 2014, "2014-01-01", paste0(min(df$Annee), "-01-01")), origin = "1970-01-01")
-  xmax_ <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
+  xmax_ <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1,
                           "2023-01-01")
                    #)
                    , origin = "1970-01-01")
 
-  plot(df$Date, df$qecb.med, xlim = c(xmin_, xmax_), ylim = c(-360, 360), pch = 19, cex = 1, main = unique(df1$Site.bis), xlab = "Année", #ylab = expression(paste("", QEBM^{2},"")), 
+  plot(df$Date, df$qecb.med, xlim = c(xmin_, xmax_), ylim = c(-360, 360), pch = 19, cex = 1, main = unique(df1$Site.bis), xlab = "Année",
        ylab = "QECB", col = "grey")
   points(df1$Date, df1$qecb.med, pch = 19, cex = 1.5)
   arrows(df1$Date, df1$qecb.med, df1$Date, df1$qecb.max, code = 3, angle = 90, length = 0.00)
   arrows(df1$Date, df1$qecb.med, df1$Date, df1$qecb.min, code = 3, angle = 90, length = 0.00)
-  
+
   abline(h = c(-216, -72, 72, 216), lty = "dashed")
   text(xmax_, -288, "1")
   text(xmax_, -146, "2")
@@ -216,34 +190,29 @@ par(mar = c(5, 5, 4, 2) + 0.1)
 par(mar = c(5, 5, 4, 2) + 0.1)
 
   xmin_ <- as.Date(ifelse(min(df1$Annee) >= 2014, "2014-01-01", paste0(min(df$Annee), "-01-01")), origin = "1970-01-01")
-  xmax_ <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1, 
+  xmax_ <- as.Date(ifelse(max(df1$Annee) <= 2017, "2018-01-01", #paste0(max(qecb.val.eg$Annee)+1,
                           "2022-01-01")
                    #)
                    , origin = "1970-01-01")
 
-  #min(df$qecb.med, na.rm = TRUE)
-  #max(df$qecb.med, na.rm = TRUE)
-  #head(sort(df$qecb.med))
-  #tail(sort(df$qecb.med))
-  
-  ymin_ = ifelse(min(df1$qecb.med, na.rm = TRUE) < -70, -360, -70)
-  ymax_ = ifelse(max(df1$qecb.med, na.rm = TRUE) > 200, 360, 200)
-  
-  plot(df$Date, df$qecb.med, xlim = c(xmin_, xmax_), ylim = c(ymin_, ymax_), pch = 19, main = "", xlab = "", ylab = "", type = 'n', axes = FALSE)
+
+  ymin_ <- ifelse(min(df1$qecb.med, na.rm = TRUE) < -70, -360, -70)
+  ymax_ <- ifelse(max(df1$qecb.med, na.rm = TRUE) > 200, 360, 200)
+
+  plot(df$Date, df$qecb.med, xlim = c(xmin_, xmax_), ylim = c(ymin_, ymax_), pch = 19, main = "", xlab = "", ylab = "", type = "n", axes = FALSE)
 
   rect(as.Date("2013-01-01", origin = "1970-01-01"), -400, as.Date("2023-01-01", origin = "1970-01-01"), one, col = "red", border = NA)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), one, as.Date("2023-01-01", origin = "1970-01-01"), two, col = "orange", border = NA)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), two, as.Date("2023-01-01", origin = "1970-01-01"), three, col = "yellow", border = NA)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), three, as.Date("2023-01-01", origin = "1970-01-01"), four, col = "olivedrab", border = NA)
   rect(as.Date("2013-01-01", origin = "1970-01-01"), four, as.Date("2023-01-01", origin = "1970-01-01"), 400, col = "blue", border = NA)
-  
+
   par(new = TRUE)
-  plot(df$Date, df$qecb.med, xlim = c(xmin_, xmax_), ylim = c(ymin_, ymax_), pch = 19, cex = 1, main = unique(df1$Site.bis), xlab = "Année", #ylab = expression(paste("", QEBM^{2},"")), 
+  plot(df$Date, df$qecb.med, xlim = c(xmin_, xmax_), ylim = c(ymin_, ymax_), pch = 19, cex = 1, main = unique(df1$Site.bis), xlab = "Année",
        ylab = "QECB", col = "grey")
   points(df1$Date, df1$qecb.med, pch = 19, cex = 1.5)
   arrows(df1$Date, df1$qecb.med, df1$Date, df1$qecb.max, code = 3, angle = 90, length = 0.00)
   arrows(df1$Date, df1$qecb.med, df1$Date, df1$qecb.min, code = 3, angle = 90, length = 0.00)
-
 ```
 
 Légende des figures. Evolution temporelle de la valeur médiane du QECB au site `r unique(df1$Site.bis)` (points noirs), en comparaison à celles des vingt-trois autres champs de blocs suivis le long de la façade Manche-Atlantique française (points gris). Les barres représentent la distribution des valeurs individuelles de QECB par bloc mobile au site `r unique(df1$Site.bis)` (n = `r sort(unique(df1$nb.notNa))[sort(unique(df1$nb.notNa)) != 0] `) entre valeurs minimums et maximums. Graphique du haut - Le découpage horizontal de la fenêtre graphique et les chiffres associés 1 à 5 représentent les classes de taille équivalente (144 unités) d'états écologiques. Graphique du bas - Le découpage horizontal de la fenêtre graphique représente les 5 classes d'états écologiques, aux limites calculées d'après la méthode des quantiles, dont le code couleur définit les états de très mauvais en rouge à très bon en bleu. 

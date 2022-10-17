@@ -10,7 +10,6 @@
         <requirement type="package" version="3.1.8">r-tibble</requirement>
         <requirement type="package" version="1.8.0">r-lubridate</requirement>
         <requirement type="package" version="1.1.1">r-cowplot</requirement>
-        <!--<requirement type="package" version="">r-hablar</requirement>-->
         <requirement type="package" version="2.16">r-rmarkdown</requirement>
         <requirement type="package" version="0.2.4">r-officedown</requirement>
         <requirement type="package" version="1.40">r-knitr</requirement>
@@ -18,7 +17,6 @@
         <requirement type="package" version="1.4.4">r-reshape2</requirement>
         <requirement type="package" version="3.3.6">r-ggplot2</requirement>
         <requirement type="package" version="2.3">r-gridExtra</requirement>
-        <!--<requirement type="package" version="2.16">r-adiv</requirement>-->
         <requirement type="package" version="1.0.9">r-Rcpp</requirement>
         <requirement type="package" version="3.6.3">r-arsenal</requirement>
         <requirement type="package" version="2.0.3">r-magrittr</requirement>
@@ -29,6 +27,8 @@
             '$__tool_directory__/cb_ecology.r'
             '$input_data'
             '$output_eco'
+            '$plots_bf'
+            '$plots_bm'
             '$plots'
             '$output_rds'
         ]]>
@@ -38,8 +38,14 @@
     </inputs>
     <outputs>
         <data name="output_eco" from_work_dir="Valeurs_stat.tabular" format="tabular" label="Dissim index"/>
-        <collection type="list" name="plots" label="Ecology plot">
-            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        <collection type="list" name="plots_bf" label="Bloc fixe et bloc mobile face sup plot">
+            <discover_datasets pattern="bm(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+        <collection type="list" name="plots_bm" label="Bloc mobile face sup et face inf plot">
+            <discover_datasets pattern="fs(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection><!--&lowbar; pour underscore-->
+        <collection type="list" name="plots" label="Distance plot">
+            <discover_datasets pattern="distance(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
         <collection type="list" name="output_rds" label="Ecology .RDS data">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.RDS" visible="false" format="Rdata"/>
@@ -58,14 +64,14 @@
         </test>
     </tests>
     <help><![CDATA[
-=================
-QECB indicator
-=================
+=======================
+Dissimilarity indicator
+=======================
 
 
 **What it does**
 
-Calculates the QECB indicator
+This tool computes the the Boulder Field Ecological Quality Index (BFEQ) based on biotic and abiotic variables that respond to the disturbance "boulder turning".
 
 **Input description**
 

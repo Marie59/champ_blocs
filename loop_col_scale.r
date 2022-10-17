@@ -21,6 +21,5 @@ slices <- unique(df$Site)[!is.na(unique(df$Site))]
          output_file = paste0(v, ".docx"),
          params = list(Site = v)
     )
-    dev.off()
   }
 #}

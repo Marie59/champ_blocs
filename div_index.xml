@@ -1,0 +1,85 @@
+<tool id="cb_div" name="Diversity index" version="0.0.0" profile = "20.01">
+    <description>indicator</description>
+    <requirements>
+        <requirement type="package" version="1.0.10">r-dplyr</requirement>
+        <requirement type="package" version="1.2.1">r-tidyr</requirement>
+        <requirement type="package" version="1.4.1">r-stringr</requirement>
+        <requirement type="package" version="3.1.8">r-tibble</requirement>
+        <requirement type="package" version="3.3.6">r-ggplot2</requirement>
+        <!--<requirement type="package" version="2.2">r-adiv</requirement>-->
+        <requirement type="package" version="2.0.3">r-magrittr</requirement>
+        <requirement type="package" version="2.4.2">r-remotes</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript
+            '$__tool_directory__/div_index.r'
+            '$input_qecb'
+            '$input_bret'
+            '$output_div'
+            '$plots'
+        ]]>
+    </command>
+    <inputs>
+        <param name="input_qecb" type="data" format="data" label="Input qecb"/>
+        <param name="input_bret" type="data" format="data" label="Input bret"/>
+    </inputs>
+    <outputs>
+        <data name="output_div" from_work_dir="Valeurs_stat.tabular" format="tabular" label="Diversity index"/>
+        <collection type="list" name="plots" label="Diversity plot">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+    </outputs>
+    <tests>
+        <test>
+            <param name="input_data" value="qecbnato0.Rdata"/>
+            <param name="input_data" value="qecbnato0.Rdata"/>
+            <output name="output_div">
+                <assert_contents>
+                    <has_n_columns n="13"/>
+                </assert_contents>
+            </output>
+            <output_collection name="plots" type="list" count="3"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+====================
+Diversity indicators
+====================
+
+
+**What it does**
+
+Calculates the diversity indicators. 
+
+**Input description**
+
+Four input files in csv format.
+
++--------------+----------+----------------+--------------+
+|      CSV     |    CSV   |      CSV       |      CSV     |
++==============+==========+================+==============+
+|   validate   | finish   | field validate | field finish |
++--------------+----------+----------------+--------------+
+|      ...     |    ...   |      ...       |      ...     |
++--------------+----------+----------------+--------------+
+
+
+**Output**
+
+- .RDS files 5 of them for the qecb
+- 1 tabilar file for the last cacul on qecb
+- Multiple png plots one for each of the locations
+
+
+
+    ]]>    </help>
+    <citations>
+        <citation type="bibtex">
+            @Manual{,
+            title = {Les habitats rocheux intertidaux sous l’influence d’activités anthropiques : structure, dynamique et enjeux de conservation. Sciences agricoles},
+            author = {Bernard M.},
+            year = {2012},
+            note = {https://tel.archives-ouvertes.fr/tel-00720611/}
+        </citation>
+    </citations>
+</tool>
