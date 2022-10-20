@@ -1,0 +1,79 @@
+<tool id="cb_cleaning" name="Clean data" version="0.0.0" profile = "20.01">
+    <description>for dissimilarity calculations</description>
+    <requirements>
+        <requirement type="package" version="1.0.10">r-dplyr</requirement>
+        <requirement type="package" version="1.2.1">r-tidyr</requirement>
+        <requirement type="package" version="1.4.1">r-stringr</requirement>
+        <requirement type="package" version="3.1.8">r-tibble</requirement>
+        <requirement type="package" version="1.40">r-knitr</requirement>
+        <requirement type="package" version="2.6_2">r-vegan</requirement>
+        <requirement type="package" version="3.3.6">r-ggplot2</requirement>
+        <requirement type="package" version="2.0.3">r-magrittr</requirement>
+        <requirement type="package" version="1.3.2">r-tidyverse</requirement>
+    </requirements>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript
+            '$__tool_directory__/cb_clean.r'
+            '$input_data'
+            '$fiche_val'
+            '$output_qecb'
+        ]]>
+    </command>
+    <inputs>
+        <param name="input_data" type="data" format="data" label="Input champbloc_qecb.csv"/>
+        <param name="fiche_val" type="data" format="data" label="Input ficheterrain.csv"/>
+    </inputs>
+    <outputs>
+        <data name="output_qecb" from_work_dir="qecbnato0.RDS" format="Rdata" visible="true" label="Clean Rdata"/>
+    </outputs>
+    <tests>
+        <test>
+            <param name="input_data" value="champbloc_qecb.csv"/>
+            <param name="fiche_val" value="ficheterrain.csv"/>
+            <output name="output_qecb">
+                <assert_contents>
+                    <has_size n="151.4"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
+    <help><![CDATA[
+================
+Cleaning process
+================
+
+
+**What it does**
+
+Cleans the ESTAMP data in order to calculate the dissimilarity index (another tool available on Galaxy-Ecology).
+
+**Input description**
+
+Two input files in csv format.
+
++------------------------+------------------+
+|           CSV          |        CSV       |
++========================+==================+
+|   champbloc_qecb.csv   | ficheterrain.csv |
++------------------------+------------------+
+|          ...           |        ...       |
++------------------------+------------------+
+
+
+**Output**
+
+- 1 Rdata file to use as the input of ecology
+
+
+
+    ]]>    </help>
+    <citations>
+        <citation type="bibtex">
+            @Manual{,
+            title = {Les habitats rocheux intertidaux sous l’influence d’activités anthropiques : structure, dynamique et enjeux de conservation. Sciences agricoles},
+            author = {Bernard M.},
+            year = {2012},
+            note = {https://tel.archives-ouvertes.fr/tel-00720611/}
+        </citation>
+    </citations>
+</tool>

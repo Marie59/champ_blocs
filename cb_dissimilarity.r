@@ -30,6 +30,8 @@ if (length(args) < 1) {
     stop("This tool needs at least 1 argument")
 }else {
     ecology_input <- args[1]
+    choice <- args[2]
+    choice_date <- as.numeric(args[3])
 }
 
 
@@ -122,7 +124,6 @@ matri_fct_bmf <- function(data, conca) {
  #   sqrt
   #  (qecbnato0_x[,conca]), na.rm = TRUE)
 
-  mtxdis
   expand.grid(mtxdis)
 
   mtxdisdf_ <- as.data.frame(as.matrix(mtxdis))
@@ -268,19 +269,17 @@ matri_fct_bmm <- function(data, conca) {
     rownames(qecbnato0_x) <- paste0(qecbnato0_x$Type.Bloc, "_", qecbnato0_x$Face,  "_", qecbnato0_x$Numéro.Bloc.échantillon, "_", qecbnato0_x$quadrat_bis)
 
 
-  #mtxdis <- vegan::vegdist(
-  #  sqrt
-  #  (qecbnato0_x[,c(bret_egmp_basq_qecb)]), #Transform your species abundance data_ Typically, raw abundances are transformed prior to analysis. Usually you will use square root, fourth-root, log(X+1), or presence-absence (square root being least extreme, P/A being most). I would start with square root. (https://stats.stackexchange.com/questions/234495/double-zeroes-problem-with-euclidean-distance-and-abundance-data-is-the-proble)
-  #  na.rm = T,
-  #  method = "bray" #Construct species abundance dissimilarity matrices with Bray-Curtis. If your data contains samples that are all-zero you will run into the double zero problem. This can be overcome by using a zero-adjusted Bray-Curtis coefficient, which is sometimes referred to as a 'dummy variable' which damps down the similarity fluctuations between samples that are both zero (undefined). => see below for zero-adjusted Bray-Curtis coefficient ; #another possibility, sqrt + 1 ??
-  #)
+  mtxdis <- vegan::vegdist(
+  sqrt(qecbnato0_x[, c(bret_egmp_basq_qecb)]), #Transform your species abundance data_ Typically, raw abundances are transformed prior to analysis. Usually you will use square root, fourth-root, log(X+1), or presence-absence (square root being least extreme, P/A being most). I would start with square root. (https://stats.stackexchange.com/questions/234495/double-zeroes-problem-with-euclidean-distance-and-abundance-data-is-the-proble)
+  na.rm = T,
+  method = "bray" #Construct species abundance dissimilarity matrices with Bray-Curtis. If your data contains samples that are all-zero you will run into the double zero problem. This can be overcome by using a zero-adjusted Bray-Curtis coefficient, which is sometimes referred to as a 'dummy variable' which damps down the similarity fluctuations between samples that are both zero (undefined). => see below for zero-adjusted Bray-Curtis coefficient ; #another possibility, sqrt + 1 ??
+  )
 
 
-  mtxdis <- ecole::bray0(
-    sqrt(qecbnato0_x[, conca]), na.rm = TRUE)
+  #mtxdis <- ecole::bray0(
+   # sqrt(qecbnato0_x[, conca]), na.rm = TRUE)
 
-  mtxdis
-  mtxdis
+
   expand.grid(mtxdis)
 
   mtxdisdf_ <- as.data.frame(as.matrix(mtxdis))
@@ -524,9 +523,7 @@ matri_full$Site_bis <- ifelse(matri_full$Site == "PDMO_Perharidy", "Perharidy", 
 matri_full$Site_bis <- ifelse(matri_full$Site == "BRES_Keraliou", "Keraliou", matri_full$Site_bis)
 matri_full$Site_bis <- ifelse(matri_full$Site == "FINS_Mousterlin", "Pointe de Mousterlin", matri_full$Site_bis)
 matri_full$Site_bis <- ifelse(matri_full$Site == "FINS_StNicolasGlenan", "Saint-Nicolas des Glénan", matri_full$Site_bis)
-
-
-#saveRDS(matri_full, "matri_full_log.spi.RDS")
+matri_full$Site_bis <- ifelse(matri_full$Site == "FINS_AnseRoz", "Pointe de l'Anse du Roz", matri_full$Site_bis)
 
 
 
@@ -552,11 +549,19 @@ bm_fs_fi_dist_stat <- dplyr::ungroup(bm_fs_fi_dist_stat)
 
 # Quality scale based on quartiles
 
-one <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. <= quantile(matri_full$BM_FS.FI_dist., 0.25, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
-two <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. > quantile(matri_full$BM_FS.FI_dist., 0.25, na.rm = TRUE) & BM_FS.FI_dist. <= quantile(matri_full$BM_FS.FI_dist., 0.5, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
-three <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. > quantile(matri_full$BM_FS.FI_dist., 0.5, na.rm = TRUE) & BM_FS.FI_dist. <= quantile(matri_full$BM_FS.FI_dist., 0.75, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
-four <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. > quantile(matri_full$BM_FS.FI_dist., 0.75, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
+if (choice == "N") {
+  one <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. <= quantile(matri_full$BM_FS.FI_dist., 0.25, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
+  two <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. > quantile(matri_full$BM_FS.FI_dist., 0.25, na.rm = TRUE) & BM_FS.FI_dist. <= quantile(matri_full$BM_FS.FI_dist., 0.5, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
+  three <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. > quantile(matri_full$BM_FS.FI_dist., 0.5, na.rm = TRUE) & BM_FS.FI_dist. <= quantile(matri_full$BM_FS.FI_dist., 0.75, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
+  four <- round(mean(unlist(dplyr::filter(matri_full, BM_FS.FI_dist. > quantile(matri_full$BM_FS.FI_dist., 0.75, na.rm = TRUE))["BM_FS.FI_dist."])), digits = 3)
+}else {
+  one <- 0.47
+  two <- 0.7
+  three <- 0.83
+  four <- 0.98
+}
 
+val_xmax <- as.Date(paste0(as.character(choice_date + 1), "-01-01"), origin = "1970-01-01")
 
 for (i in c(1:length(unique(bm_fs_fi_dist_stat$Site)))) {
 
@@ -564,15 +569,15 @@ for (i in c(1:length(unique(bm_fs_fi_dist_stat$Site)))) {
 
   bm_fs_fi_plot <- ggplot2::ggplot() +
   ggplot2::geom_point(ggplot2::aes(x = bm_fs_fi_dist_stat$Date, y = bm_fs_fi_dist_stat$BM_FS.FI_dist.med), col = "grey") +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = - 0.1, ymax = one, fill = "blue"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = one, ymax = two, fill = "green"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = two, ymax = three, fill = "yellow"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = three, ymax = four, fill = "orange"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = four, ymax = 1.1, fill = "red"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = - 0.1, ymax = one, fill = "blue"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = one, ymax = two, fill = "green"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = two, ymax = three, fill = "yellow"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = three, ymax = four, fill = "orange"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = four, ymax = 1.1, fill = "red"), alpha = 0.3) +
   ggplot2::geom_pointrange(ggplot2::aes(x = df1$Date, y = df1$BM_FS.FI_dist.med, ymin = df1$BM_FS.FI_dist.min, ymax =  df1$BM_FS.FI_dist.max), col = "black") +
   ggplot2::xlab("Date") +
   ggplot2::ylab("Coef dissim BM FS-FI") +
-  ggplot2::ggtitle(unique(df1$Site)) +
+  ggplot2::ggtitle(unique(df1$Site_bis)) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
 
 ggplot2::ggsave(paste0("fs_fi_", df1$Site, ".png"), device = "png", bm_fs_fi_plot, height = 3, width = 3.5)
@@ -592,11 +597,18 @@ bm_bf_fs_dist_stat <- dplyr::ungroup(bm_bf_fs_dist_stat)
 
 # Quality scale based on quartiles
 
-one <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. <= quantile(matri_full$BM.BF_FS_dist., 0.25, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
-two <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. > quantile(matri_full$BM.BF_FS_dist., 0.25, na.rm = TRUE) & BM.BF_FS_dist. <= quantile(matri_full$BM.BF_FS_dist., 0.5, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
-three <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. > quantile(matri_full$BM.BF_FS_dist., 0.5, na.rm = TRUE) & BM.BF_FS_dist. <= quantile(matri_full$BM.BF_FS_dist., 0.75, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
-four <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. > quantile(matri_full$BM.BF_FS_dist., 0.75, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
+if (choice == "N") {
+  one <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. <= quantile(matri_full$BM.BF_FS_dist., 0.25, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
+  two <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. > quantile(matri_full$BM.BF_FS_dist., 0.25, na.rm = TRUE) & BM.BF_FS_dist. <= quantile(matri_full$BM.BF_FS_dist., 0.5, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
+  three <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. > quantile(matri_full$BM.BF_FS_dist., 0.5, na.rm = TRUE) & BM.BF_FS_dist. <= quantile(matri_full$BM.BF_FS_dist., 0.75, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
+  four <- round(mean(unlist(dplyr::filter(matri_full, BM.BF_FS_dist. > quantile(matri_full$BM.BF_FS_dist., 0.75, na.rm = TRUE))["BM.BF_FS_dist."])), digits = 3)
 
+}else {
+  one <- 0.19
+  two <- 0.32
+  three <-0.455
+  four <- 0.735
+}
 # Plot
 
 for (i in c(1:length(unique(bm_bf_fs_dist_stat$Site)))) {
@@ -605,15 +617,15 @@ for (i in c(1:length(unique(bm_bf_fs_dist_stat$Site)))) {
 
   bm_bf_fs_plot <- ggplot2::ggplot() +
   ggplot2::geom_point(ggplot2::aes(x = bm_bf_fs_dist_stat$Date, y = bm_bf_fs_dist_stat$BM.BF_FS_dist.med), col = "grey") +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = - 0.1, ymax = one, fill = "red"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = one, ymax = two, fill = "orange"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = two, ymax = three, fill = "yellow"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = three, ymax = four, fill = "green"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = four, ymax = 1.1, fill = "blue"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = - 0.1, ymax = one, fill = "red"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = one, ymax = two, fill = "orange"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = two, ymax = three, fill = "yellow"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = three, ymax = four, fill = "green"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = four, ymax = 1.1, fill = "blue"), alpha = 0.3) +
   ggplot2::geom_pointrange(ggplot2::aes(x = df1$Date, y = df1$BM.BF_FS_dist.med, ymin = df1$BM.BF_FS_dist.min, ymax =  df1$BM.BF_FS_dist.max), col = "black") +
   ggplot2::xlab("Date") +
   ggplot2::ylab("Coef dissim BM-BF FS") +
-  ggplot2::ggtitle(unique(df1$Site)) +
+  ggplot2::ggtitle(unique(df1$Site_bis)) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
 
 ggplot2::ggsave(paste0("bm_bf_", df1$Site, ".png"), device = "png", bm_bf_fs_plot, height = 3, width = 3.5)

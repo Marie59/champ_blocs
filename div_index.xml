@@ -1,5 +1,5 @@
-<tool id="cb_div" name="Diversity index" version="0.0.0" profile = "20.01">
-    <description>indicator</description>
+<tool id="cb_div" name="Diversity" version="0.0.0" profile = "20.01">
+    <description>indicators</description>
     <requirements>
         <requirement type="package" version="1.0.10">r-dplyr</requirement>
         <requirement type="package" version="1.2.1">r-tidyr</requirement>

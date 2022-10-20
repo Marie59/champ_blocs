@@ -86,38 +86,64 @@ rm(fiche_expanded, fiche_red, id_count)
 
 ivr <- ivr %>% tidyr::separate(date_fiche, c("Year", "Month", "Day"), sep = "-", remove = FALSE)
 
-
 ## I create two new variables for Site names, one for data analysis and one for data reporting. Only works for actual ivr df with 22 sites !
 
 # Name for data analysis
 ivr <- tibble::add_column(ivr, Site = ivr$zone.habitat, .after = "ID.Fiche")
+ivr$Site <- gsub(pattern = " \\(champ de blocs\\)", replacement = "", ivr$Site) 
+ivr$Site <- gsub(pattern = " \\(champ blocs\\)", replacement = "", ivr$Site) 
 
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[1], "GDMO_Locmariaquer", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[2], "GDMO_BegLann", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[3], "FOUR_PlateauFour", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[5], "EGMP_PasEmsembert", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[6], "EGMP_BreeBains", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[7], "EGMP_PerreAntiochat", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[8], "EGMP_Chassiron", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[9], "BASQ_FlotsBleusZP", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[10], "BASQ_FlotsBleusZF", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[11], "GONB_IlotStMichel", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[12], "FINS_Quemenes", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[13], "FINS_SeinGoulenez", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[14], "FINS_SeinKilaourou", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[15], "ARMO_Verdelet", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[16], "ARMO_Piegu", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[17], "ARMO_Bilfot", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[18], "ARMO_IlePlate", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[19], "PDMO_Perharidy", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[20], "BRES_Keraliou", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[21], "FINS_Mousterlin", ivr$Site)
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[22], "FINS_StNicolasGlenan", ivr$Site)
+for (x in seq_along(ivr$Site)) {
+  if (grepl(pattern = "Locmariaquer", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "GDMO_Locmariaquer"
+ } else if (grepl(pattern = "Beg Lann", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "GDMO_BegLann"
+ } else if (grepl(pattern = "Plateau du Four", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "FOUR_PlateauFour"
+ } else if (grepl(pattern = "Grouin", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "EGMP_GroinCou"
+ } else if (grepl(pattern = "Ensembert", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "EGMP_PasEmsembert"
+ } else if (grepl(pattern = "Brée-les-Bains", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "EGMP_BreeBains"
+ } else if (grepl(pattern = "Antiochat", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "EGMP_PerreAntiochat"
+ } else if (grepl(pattern = "Chassiron", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "EGMP_Chassiron"
+ } else if (grepl(pattern = "zone p", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "BASQ_FlotsBleusZP"
+ } else if (grepl(pattern = "zone f", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "BASQ_FlotsBleusZF"
+ } else if (grepl(pattern = "Saint-Michel", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "GONB_IlotStMichel"
+ } else if (grepl(pattern = "Quéménès", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "FINS_Quemenes"
+ } else if (grepl(pattern = "Goulenez", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "FINS_SeinGoulenez"
+ } else if (grepl(pattern = "Kilaourou", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "FINS_SeinKilaourou"
+ } else if (grepl(pattern = "Verdelet", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "ARMO_Verdelet"
+ } else if (grepl(pattern = "Piégu", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "ARMO_Piegu"
+ } else if (grepl(pattern = "Bilfot", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "ARMO_Bilfot"
+ } else if (grepl(pattern = "Plate", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "ARMO_IlePlate"
+ } else if (grepl(pattern = "Perharidy", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "PDMO_Perharidy"
+ } else if (grepl(pattern = "Keraliou", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "BRES_Keraliou"
+ } else if (grepl(pattern = "Mousterlin", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "FINS_Mousterlin"
+ } else if (grepl(pattern = "Nicolas", ivr$Site[x]) == TRUE) {
+    ivr$Site[x] <- "FINS_StNicolasGlenan"
+ }   
+if (grepl(pattern = "Roz", ivr$site[x]) == TRUE) {
+    ivr$Site[x] <- "FINS_AnseRoz"
+}
+}
 
-
-
-# Anne Boulet forgot to specify zone.habitat in 2020. I asked her to correct it in ESTAMP
-ivr$Site <- ifelse(ivr$zone.habitat == unique(ivr$zone.habitat)[23], "GDMO_Locmariaquer", ivr$Site)
 
 # Name for report/plot
 
@@ -126,7 +152,7 @@ ivr <- tibble::add_column(ivr, Site_bis = ivr$Site, .after = "Site")
 ivr$Site_bis <- ifelse(ivr$Site == "GDMO_Locmariaquer", "Locmariaquer", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "GDMO_BegLann", "Beg Lann", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "FOUR_PlateauFour", "Plateau du Four", ivr$Site_bis)
-ivr$Site_bis <- ifelse(ivr$Site == "EGMP_GroinCou", "Groin du Cou", ivr$Site_bis)
+ivr$Site_bis <- ifelse(ivr$Site == "EGMP_GroinCou", "Grouin du Cou", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "EGMP_PasEmsembert", "Le Pas d'Emsembert", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "EGMP_BreeBains", "La Brée-les-Bains", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "EGMP_PerreAntiochat", "Le Perré d'Antiochat", ivr$Site_bis)
@@ -145,7 +171,7 @@ ivr$Site_bis <- ifelse(ivr$Site == "PDMO_Perharidy", "Perharidy", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "BRES_Keraliou", "Keraliou", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "FINS_Mousterlin", "Pointe de Mousterlin", ivr$Site_bis)
 ivr$Site_bis <- ifelse(ivr$Site == "FINS_StNicolasGlenan", "Saint-Nicolas des Glénan", ivr$Site_bis)
-
+ivr$Site_bis <- ifelse(ivr$Site == "FINS_AnseRoz", "Pointe de l'Anse du Roz", ivr$Site_bis)
 
 ## change some variable format to integer
 ivr$Nb.Blocs.Non.Retournes <- as.integer(ivr$Nb.Blocs.Non.Retournes)
@@ -161,7 +187,7 @@ ivr$Numero.Quadrat <- as.integer(ivr$Numero.Quadrat)
 
 ivr <- ivr[, c(19:54, 1:18)]
 
-saveRDS(ivr, "ivr.RDS")
+#saveRDS(ivr, "ivr.RDS")
 
 
 ## percentage of unturned vs overturned boulders and IVR previous 0-5 discrete scale values calculation
@@ -241,7 +267,7 @@ rm(i, ivr_)
 # reorder variables for logical purpose
 ivr_val_qu_ <- ivr_val_qu_[, c(1:56, 58, 57, 59)]
 indic_full <- ivr_val_qu_
-saveRDS(ivr_val_qu_, "ivr_val_qu.RDS")
+#saveRDS(ivr_val_qu_, "ivr_val_qu.RDS")
 
 rm(ivr_naomit)
 
@@ -257,7 +283,6 @@ ivr_val_qu_stat_ <- as.data.frame(ivr_val_qu_stat_)
 indic <- ivr_val_qu_stat_
 saveRDS(ivr_val_qu_stat_, "ivr_val_qu_stat.RDS")
 
-write.table(ivr_val_qu_stat_, "Valeurs_stat.tabular", row.names = FALSE, quote = FALSE, sep = "\t", dec = ".", fileEncoding = "UTF-8")
 
 #############################################################
 #                                                           #
@@ -270,7 +295,6 @@ ivr_val_qu_stat_ <- dplyr::rename(ivr_val_qu_stat_, Annee = Year)
 ivr_val_qu_stat_ <- dplyr::rename(ivr_val_qu_stat_, Mois = Month)
 ivr_val_qu_stat_ <- dplyr::rename(ivr_val_qu_stat_, Jour = Day)
 
-write.table(ivr_val_qu_stat_, "Valeurs_stat.tabular", row.names = FALSE, quote = FALSE, sep = "\t", dec = ".", fileEncoding = "UTF-8")
 
 # new IVR scale with continuous 0 to 5 environmental status levels based on % of overturned boulders /20, plus other site data
 
@@ -280,16 +304,16 @@ for (i in c(1:length(unique(ivr_val_qu_stat_$Site)))) {
 
   ivr_plot <- ggplot2::ggplot() +
   ggplot2::geom_point(ggplot2::aes(x = ivr_val_qu_stat_$Date, y = ivr_val_qu_stat_$fr.r.moy / 20), col = "grey") +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = - 0.5, ymax = 5 / 20, fill = "red"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = 5 / 20, ymax = 25 / 20, fill = "orange"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = 25 / 20, ymax = 45 / 20, fill = "gold"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = 45 / 20, ymax = 65 / 20, fill = "yellow"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = 65 / 20, ymax = 85 / 20, fill = "green"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = as.Date("2023-01-01", origin = "1970-01-01"), ymin = 85 / 20, ymax = 5.5, fill = "blue"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = - 0.5, ymax = 5 / 20, fill = "#FF0000"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 5 / 20, ymax = 25 / 20, fill = "#FFCE0D"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 25 / 20, ymax = 45 / 20, fill = "#EB9B12"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 45 / 20, ymax = 65 / 20, fill = "#F6EE0E"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 65 / 20, ymax = 85 / 20, fill = "#2CDE26"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 85 / 20, ymax = 5.5, fill = "#262CDE"), alpha = 0.3) +
   ggplot2::geom_pointrange(ggplot2::aes(x = ivr_val_eg$Date, y = ivr_val_eg$fr.r.moy / 20, ymin = ivr_val_eg$fr.r.moy / 20 - ivr_val_eg$fr.r.et / 20, ymax = ivr_val_eg$fr.r.moy / 20 + ivr_val_eg$fr.r.et / 20), col = "black") +
   ggplot2::xlab("Date") +
   ggplot2::ylab("IVR") +
-  ggplot2::ggtitle(unique(ivr_val_eg$Site)) +
+  ggplot2::ggtitle(unique(ivr_val_eg$Site_bis)) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1), legend.position = "none")
 
 ggplot2::ggsave(paste0("ivr_", unique(ivr_val_eg$Site), ".png"), ivr_plot, height = 3, width = 3.5)

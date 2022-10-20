@@ -1,3 +1,5 @@
+
+
 # author: "Jonathan Richir"
 # date: "19 April 2021"
 
@@ -107,32 +109,56 @@ qecb$quadrat_bis <- ifelse(qecb$Numéro.Bloc.échantillon == 5 & qecb$Type.Bloc 
 
 qecb <- tibble::add_column(qecb, Site = qecb$zone.habitat, .after = "ID.Fiche")
 
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[1], "GDMO_Locmariaquer", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[2], "GDMO_BegLann", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[3], "FOUR_PlateauFour", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[5], "EGMP_PasEmsembert", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[6], "EGMP_BreeBains", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[7], "EGMP_PerreAntiochat", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[8], "EGMP_Chassiron", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[9], "BASQ_FlotsBleusZP", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[10], "BASQ_FlotsBleusZF", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[11], "GONB_IlotStMichel", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[12], "FINS_Quemenes", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[13], "FINS_SeinGoulenez", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[14], "FINS_SeinKilaourou", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[15], "ARMO_Verdelet", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[16], "ARMO_Piegu", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[17], "ARMO_Bilfot", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[18], "ARMO_IlePlate", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[19], "PDMO_Perharidy", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[20], "BRES_Keraliou", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[21], "FINS_Mousterlin", qecb$Site)
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[22], "FINS_StNicolasGlenan", qecb$Site)
-
-
-
-# Anne Boulet forgot to specify zone.habitat in 2020. I asked her to correct it in ESTAMP
-qecb$Site <- ifelse(qecb$zone.habitat == unique(qecb$zone.habitat)[23], "GDMO_Locmariaquer", qecb$Site)
+for (x in seq_along(qecb$Site)) {
+  if (grepl(pattern = "Locmariaquer", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "GDMO_Locmariaquer"
+ } else if (grepl(pattern = "Beg Lann", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "GDMO_BegLann"
+ } else if (grepl(pattern = "Plateau du Four", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "FOUR_PlateauFour"
+ } else if (grepl(pattern = "Grouin", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "EGMP_GroinCou"
+ } else if (grepl(pattern = "Ensembert", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "EGMP_PasEmsembert"
+ } else if (grepl(pattern = "Brée-les-Bains", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "EGMP_BreeBains"
+ } else if (grepl(pattern = "Antiochat", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "EGMP_PerreAntiochat"
+ } else if (grepl(pattern = "Chassiron", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "EGMP_Chassiron"
+ } else if (grepl(pattern = "zone p", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "BASQ_FlotsBleusZP"
+ } else if (grepl(pattern = "zone f", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "BASQ_FlotsBleusZF"
+ } else if (grepl(pattern = "Saint-Michel", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "GONB_IlotStMichel"
+ } else if (grepl(pattern = "Quéménès", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "FINS_Quemenes"
+ } else if (grepl(pattern = "Goulenez", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "FINS_SeinGoulenez"
+ } else if (grepl(pattern = "Kilaourou", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "FINS_SeinKilaourou"
+ } else if (grepl(pattern = "Verdelet", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "ARMO_Verdelet"
+ } else if (grepl(pattern = "Piégu", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "ARMO_Piegu"
+ } else if (grepl(pattern = "Bilfot", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "ARMO_Bilfot"
+ } else if (grepl(pattern = "Plate", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "ARMO_IlePlate"
+ } else if (grepl(pattern = "Perharidy", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "PDMO_Perharidy"
+ } else if (grepl(pattern = "Keraliou", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "BRES_Keraliou"
+ } else if (grepl(pattern = "Mousterlin", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "FINS_Mousterlin"
+ } else if (grepl(pattern = "Nicolas", qecb$Site[x]) == TRUE) {
+    qecb$Site[x] <- "FINS_StNicolasGlenan"
+ } 
+  if (grepl(pattern = "Roz", qecb$site[x]) == TRUE) {
+    qecb$Site[x] <- "FINS_AnseRoz"
+}
+}
 
 # Name for report/plot
 
@@ -160,6 +186,7 @@ qecb$Site_bis <- ifelse(qecb$Site == "PDMO_Perharidy", "Perharidy", qecb$Site_bi
 qecb$Site_bis <- ifelse(qecb$Site == "BRES_Keraliou", "Keraliou", qecb$Site_bis)
 qecb$Site_bis <- ifelse(qecb$Site == "FINS_Mousterlin", "Pointe de Mousterlin", qecb$Site_bis)
 qecb$Site_bis <- ifelse(qecb$Site == "FINS_StNicolasGlenan", "Saint-Nicolas des Glénan", qecb$Site_bis)
+qecb$Site_bis <- ifelse(qecb$Site == "FINS_AnseRoz", "Pointe de l'Anse du Roz", qecb$Site_bis)
 
 ## change some variables to factor
 

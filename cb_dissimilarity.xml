@@ -1,43 +1,40 @@
-<tool id="cb_eco" name="Ecology" version="0.0.0" profile = "20.01">
+<tool id="cb_dissim" name="Dissimilarity" version="0.0.0" profile = "20.01">
     <description>indicator</description>
     <requirements>
         <requirement type="package" version="1.0.10">r-dplyr</requirement>
         <requirement type="package" version="1.2.1">r-tidyr</requirement>
-        <requirement type="package" version="2.1.2">r-readr</requirement>
-        <requirement type="package" version="1.4.0">r-writexl</requirement>
         <requirement type="package" version="1.4.1">r-stringr</requirement>
-        <requirement type="package" version="1.4.1">r-readxl</requirement>
         <requirement type="package" version="3.1.8">r-tibble</requirement>
-        <requirement type="package" version="1.8.0">r-lubridate</requirement>
-        <requirement type="package" version="1.1.1">r-cowplot</requirement>
         <requirement type="package" version="2.16">r-rmarkdown</requirement>
         <requirement type="package" version="0.2.4">r-officedown</requirement>
         <requirement type="package" version="1.40">r-knitr</requirement>
         <requirement type="package" version="2.6_2">r-vegan</requirement>
-        <requirement type="package" version="1.4.4">r-reshape2</requirement>
         <requirement type="package" version="3.3.6">r-ggplot2</requirement>
-        <requirement type="package" version="2.3">r-gridExtra</requirement>
-        <requirement type="package" version="1.0.9">r-Rcpp</requirement>
-        <requirement type="package" version="3.6.3">r-arsenal</requirement>
         <requirement type="package" version="2.0.3">r-magrittr</requirement>
         <requirement type="package" version="2.4.2">r-remotes</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
         Rscript
-            '$__tool_directory__/cb_ecology.r'
+            '$__tool_directory__/cb_dissimilarity.r'
             '$input_data'
+            '$choice'
+            '$choice_date'
             '$output_eco'
             '$plots_bf'
             '$plots_bm'
             '$plots'
-            '$output_rds'
         ]]>
     </command>
     <inputs>
-        <param name="input_data" type="data" format="data" label="Input data"/>
+        <param name="input_data" type="data" format="Rdata" label="Input clean Rdata"/>
+        <param name="choice" type="select" label="Do you have data after the year 2021 ?" display="radio">
+            <option value="N">No</option>
+            <option value="Y">Yes</option>
+        </param>
+        <param name="choice_date" type="text" label="Until when do you have data (write only the YEAR) ?" help="Example write : 2022 "/>
     </inputs>
     <outputs>
-        <data name="output_eco" from_work_dir="Valeurs_stat.tabular" format="tabular" label="Dissim index"/>
+        <data name="output_eco" from_work_dir="bret_egmp_basq_qecb.RDS" format="Rdata" label="Dissim Rdata"/>
         <collection type="list" name="plots_bf" label="Bloc fixe et bloc mobile face sup plot">
             <discover_datasets pattern="bm(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
@@ -47,20 +44,18 @@
         <collection type="list" name="plots" label="Distance plot">
             <discover_datasets pattern="distance(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
-        <collection type="list" name="output_rds" label="Ecology .RDS data">
-            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.RDS" visible="false" format="Rdata"/>
-        </collection>
     </outputs>
     <tests>
         <test>
-            <param name="input_data" value="qecbnew.Rdata"/>
+            <param name="input_data" value="qecbnato0.Rdata"/>
             <output name="output_eco">
                 <assert_contents>
-                    <has_n_columns n="13"/>
+                    <has_size n="295"/>
                 </assert_contents>
             </output>
-            <output_collection name="plots" type="list" count="3"/>
-            <output_collection name="output_rds" type="list" count="5"/>
+            <output_collection name="plots_bf" type="list" count="22"/>
+            <output_collection name="plots_bm" type="list" count="22"/>
+            <output_collection name="plots" type="list" count="2"/>
         </test>
     </tests>
     <help><![CDATA[
@@ -75,21 +70,20 @@ This tool computes the the Boulder Field Ecological Quality Index (BFEQ) based o
 
 **Input description**
 
-Four input files in csv format.
+One input files in Rdata format.
 
-+--------------+----------+----------------+--------------+
-|      CSV     |    CSV   |      CSV       |      CSV     |
-+==============+==========+================+==============+
-|   validate   | finish   | field validate | field finish |
-+--------------+----------+----------------+--------------+
-|      ...     |    ...   |      ...       |      ...     |
-+--------------+----------+----------------+--------------+
++----------------+
+|      Rdata     |
++================+
+|   clean Rdata  |
++----------------+
+|       ...      |
++----------------+
 
 
 **Output**
 
-- .RDS files 5 of them for the qecb
-- 1 tabilar file for the last cacul on qecb
+- .RDS file 1 of them to use as an input for diversity index 
 - Multiple png plots one for each of the locations
 
 

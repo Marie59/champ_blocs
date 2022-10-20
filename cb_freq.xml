@@ -14,28 +14,20 @@
             '$input_hab'
             '$input_site'
             '$input_soussite'
-            '$fiche_val'
-            '$input_hab_term'
-            '$input_site_term'
-            '$input_soussite_term'
+            '$fiche_terr'
             '$input_obs'
-            '$input_obs_term'
-            '$fiche_term'
+            '$qecb'
             '$output_freq'
             '$plots'
         ]]>
     </command>
     <inputs>
-        <param name="input_hab" type="data" format="tabular" label="Input habitat valid"/>
-        <param name="input_site" type="data" format="tabular" label="Input site valid"/>
-        <param name="input_soussite" type="data" format="tabular" label="Input sub site valid"/>
-        <param name="fiche_val" type="data" format="tabular" label="Input data field valid"/>
-        <param name="input_hab_term" type="data" format="tabular" label="Input habitat finish"/>
-        <param name="input_site_term" type="data" format="tabular" label="Input site finish"/>
-        <param name="input_soussite_term" type="data" format="tabular" label="Input sub site finish"/>
-        <param name="input_obs" type="data" format="tabular" label="Input data observation valid"/>
-        <param name="input_obs_term" type="data" format="tabular" label="Input data observation finish"/>
-        <param name="fiche_term" type="data" format="tabular" label="Input data field finish"/>
+        <param name="input_hab" type="data" format="data" label="Input habitat"/>
+        <param name="input_site" type="data" format="data" label="Input site"/>
+        <param name="input_soussite" type="data" format="data" label="Input sub site"/>
+        <param name="fiche_terr" type="data" format="data" label="Input data field"/>
+        <param name="input_obs" type="data" format="data" label="Input data observation"/>
+        <param name="qecb" type="data" format="Rdata" label="Input qecb"/>
     </inputs>
     <outputs>
         <data name="output_freq" from_work_dir="Valeurs_stat.tabular" format="txt" label="FREQ"/>
