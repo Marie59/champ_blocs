@@ -646,7 +646,7 @@ na.omit(freq.[, c("Site", "Site_bis", "Code.Habitat", "Site.date.sortie", "Annee
   dplyr::group_by(Site, Site_bis, Code.Habitat, Site.date.sortie, Annee_semester) %>%
   dplyr::summarise(FrHa_Nb.Total = mean(FrHa_Nb.Total), nb = dplyr::n()) -> FrHa
 FrHa <- data.frame(FrHa)
-
+stop(freq.$FrHa_Nb.Total)
 
 na.omit(FrSi[, c("Site", "Site_bis", "FrSi_Code.Site", "Site.date.sortie", "Annee_semester", "FrSi_Nb.Total")]) %>%
   dplyr::group_by(Site, Site_bis, FrSi_Code.Site, Annee_semester) %>%
@@ -658,9 +658,11 @@ na.omit(FrSsSi[, c("Site", "Site_bis", "Code.Sous.Site", "Site.date.sortie", "An
   dplyr::summarise(mean.FrSsSi_Nb.Total = mean(FrSsSi_Nb.Total), median.FrSsSi_Nb.Total = median(FrSsSi_Nb.Total), min.FrSsSi_Nb.Total = min(FrSsSi_Nb.Total), max.FrSsSi_Nb.Total = max(FrSsSi_Nb.Total), nb.FrSsSi_Nb.Total = dplyr::n()) -> FrSsSi.stat
 FrSsSi.stat <- data.frame(FrSsSi.stat)
 
-na.omit(FrHa[, c("Site", "Site_bis", "Code.Habitat", "Site.date.sortie", "Annee_semester", "FrHa_Nb.Total")]) %>%
+FrHa.stat <- na.omit(FrHa[, c("Site", "Site_bis", "Code.Habitat", "Site.date.sortie", "Annee_semester", "FrHa_Nb.Total")]) %>%
   dplyr::group_by(Site, Site_bis, Code.Habitat, Annee_semester) %>%
-  dplyr::summarise(mean.FrHa_Nb.Total = mean(FrHa_Nb.Total), median.FrHa_Nb.Total = median(FrHa_Nb.Total), min.FrHa_Nb.Total = min(FrHa_Nb.Total), max.FrHa_Nb.Total = max(FrHa_Nb.Total), nb.FrHa_Nb.Total = dplyr::n()) -> FrHa.stat
+  dplyr::summarise(mean.FrHa_Nb.Total = mean(FrHa_Nb.Total), median.FrHa_Nb.Total = median(FrHa_Nb.Total), min.FrHa_Nb.Total = min(FrHa_Nb.Total), max.FrHa_Nb.Total = max(FrHa_Nb.Total), nb.FrHa_Nb.Total = dplyr::n())
+
+
 FrHa.stat <- data.frame(FrHa.stat)
 
 freq.Nb.Total.stat <- dplyr::full_join(FrSi.stat, FrSsSi.stat, by = c("Site", "Site_bis", "Annee_semester"))

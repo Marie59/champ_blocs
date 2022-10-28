@@ -28,8 +28,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) {
     stop("This tool needs at least 1 argument")
 }else {
-    input_data <- args[1]
-    fiche_val <- args[2]
+    fiche_val <- args[1]
+    input_data <- args[2]
 
 }
 
@@ -305,11 +305,12 @@ for (i in c(1:length(unique(ivr_val_qu_stat_$Site)))) {
   ivr_plot <- ggplot2::ggplot() +
   ggplot2::geom_point(ggplot2::aes(x = ivr_val_qu_stat_$Date, y = ivr_val_qu_stat_$fr.r.moy / 20), col = "grey") +
   ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = - 0.5, ymax = 5 / 20, fill = "#FF0000"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 5 / 20, ymax = 25 / 20, fill = "#FFCE0D"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 25 / 20, ymax = 45 / 20, fill = "#EB9B12"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 45 / 20, ymax = 65 / 20, fill = "#F6EE0E"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 65 / 20, ymax = 85 / 20, fill = "#2CDE26"), alpha = 0.3) +
-  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 85 / 20, ymax = 5.5, fill = "#262CDE"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 5 / 20, ymax = 25 / 20, fill = "#F59404"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 25 / 20, ymax = 45 / 20, fill = "#FAFA15"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 45 / 20, ymax = 65 / 20, fill = "#18E125"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 65 / 20, ymax = 85 / 20, fill = "#04F5F5"), alpha = 0.3) +
+  ggplot2::geom_rect(ggplot2::aes(xmin = min(ivr_val_qu_stat_$Date), xmax = max(ivr_val_qu_stat_$Date), ymin = 85 / 20, ymax = 5.5, fill = "#1A1AE8"), alpha = 0.3) +
+  ggplot2::scale_fill_manual(values = c("#F59404", "#FAFA15", "#FF0000", "#04F5F5", "#18E125", "#1A1AE8")) +
   ggplot2::geom_pointrange(ggplot2::aes(x = ivr_val_eg$Date, y = ivr_val_eg$fr.r.moy / 20, ymin = ivr_val_eg$fr.r.moy / 20 - ivr_val_eg$fr.r.et / 20, ymax = ivr_val_eg$fr.r.moy / 20 + ivr_val_eg$fr.r.et / 20), col = "black") +
   ggplot2::xlab("Date") +
   ggplot2::ylab("IVR") +

@@ -31,8 +31,8 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) {
     stop("This tool needs at least 1 argument")
 }else {
-    input_data <- args[1]
-    fiche_val <- args[2]
+    fiche_val <- args[1]
+    input_data <- args[2]
 
 }
 
@@ -289,6 +289,7 @@ quemenes <- dplyr::filter(qecbnew, Site == "FINS_Quemenes")
 quemenes <- dplyr::arrange(quemenes, date_fiche)
 # for Quemenes, issue because for sampling date "FINS_Quemenes.2015.09.30" the 5 counts of Spirobranchus were encoded in 1B instead of total !!! I noticed this issue when mining data (see below), therefore I corrected before running below script for Spirobranchus.
 qecbnew$Nb.Spirobranchus.lamarckii.total <- ifelse(qecbnew$site_year_month_day == "FINS_Quemenes.2015.09.30" & is.na(qecbnew$Nb.Spirobranchus.lamarckii.total), qecbnew$Nb.Spirobranchus.lamarckii.1B, qecbnew$Nb.Spirobranchus.lamarckii.total)
+
 (quemenes <- dplyr::filter(qecbnew, site_year_month_day == "FINS_Quemenes.2015.09.30")[, c("site_year_month_day", "Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total")])
 rm(quemenes)
 
@@ -300,16 +301,18 @@ qecbnew$Nb.Spirobranchus.lamarckii.total <- ifelse(qecbnew$site_year_month_day =
 rm(seinkilaourou)
 
 # some more issues however with "x100"count data
-
 Spirobranchus <- subset(qecbnew, !is.na(qecbnew$Nb.Spirobranchus.lamarckii.1B) & !is.na(qecbnew$Nb.Spirobranchus.lamarckii.2B) & !is.na(qecbnew$Nb.Spirobranchus.lamarckii.3B) & !is.na(qecbnew$Nb.Spirobranchus.lamarckii.4B) & !is.na(qecbnew$Nb.Spirobranchus.lamarckii.5B) & !is.na(qecbnew$Nb.Spirobranchus.lamarckii.total))[, c("site_year_month_day", "Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B", "Nb.Spirobranchus.lamarckii.total")]
+
 for (i in c(1:nrow(Spirobranchus))) {
   Spirobranchus$mean.x.100[[i]] <- sum(Spirobranchus[i, c(2:6)], na.rm = TRUE) / sum(!is.na(Spirobranchus[i, c(2:6)])) * 100
 }
+
 Spirobranchus$mean.x.100 <- unlist(Spirobranchus$mean.x.100)
 Spirobranchus$Nb.Spirobranchus.lamarckii.total <- as.numeric(Spirobranchus$Nb.Spirobranchus.lamarckii.total)
 for (i in c(1:nrow(Spirobranchus))) {
   Spirobranchus$diff[[i]] <- Spirobranchus[i, "Nb.Spirobranchus.lamarckii.total"] - Spirobranchus[i, "mean.x.100"]
 }
+
 Spirobranchus$diff <- abs(as.integer(Spirobranchus$diff))
 Spirobranchus <- dplyr::arrange(Spirobranchus, desc(diff), mean.x.100)
 Spirobranchus <- dplyr::arrange(dplyr::filter(Spirobranchus, diff != 0 & mean.x.100 != 0), desc(diff))
@@ -318,9 +321,7 @@ Spirobranchus <- dplyr::arrange(dplyr::filter(Spirobranchus, diff != 0 & mean.x.
 
 for (i in c(1:nrow(qecbnew))) {
   qecbnew$mean.x.100[[i]] <-
-    #ifelse(qecbnew$Nb.Spirobranchus.lamarckii.total[[i]] %in% c(NA, "NaN", "Inf", "-Inf"),
     sum(qecbnew[i, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B")], na.rm = TRUE) / sum(!is.na(qecbnew[i, c("Nb.Spirobranchus.lamarckii.1B", "Nb.Spirobranchus.lamarckii.2B", "Nb.Spirobranchus.lamarckii.3B", "Nb.Spirobranchus.lamarckii.4B", "Nb.Spirobranchus.lamarckii.5B")])) * 100
-  #, qecbnew$Nb.Spirobranchus.lamarckii.total[[i]])
 } # sum of only NAs/0 = NaN; so replace NaN by Na
 qecbnew$mean.x.100 <- as.character(qecbnew$mean.x.100)
 

@@ -574,6 +574,7 @@ for (i in c(1:length(unique(bm_fs_fi_dist_stat$Site)))) {
   ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = two, ymax = three, fill = "yellow"), alpha = 0.3) +
   ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = three, ymax = four, fill = "orange"), alpha = 0.3) +
   ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = four, ymax = 1.1, fill = "red"), alpha = 0.3) +
+  ggplot2::scale_fill_manual(values = c("#FF0000", "#F59404", "#18E125", "#1A1AE8", "#FAFA15")) +
   ggplot2::geom_pointrange(ggplot2::aes(x = df1$Date, y = df1$BM_FS.FI_dist.med, ymin = df1$BM_FS.FI_dist.min, ymax =  df1$BM_FS.FI_dist.max), col = "black") +
   ggplot2::xlab("Date") +
   ggplot2::ylab("Coef dissim BM FS-FI") +
@@ -622,6 +623,7 @@ for (i in c(1:length(unique(bm_bf_fs_dist_stat$Site)))) {
   ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = two, ymax = three, fill = "yellow"), alpha = 0.3) +
   ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = three, ymax = four, fill = "green"), alpha = 0.3) +
   ggplot2::geom_rect(ggplot2::aes(xmin = as.Date("2013-01-01", origin = "1970-01-01"), xmax = val_xmax, ymin = four, ymax = 1.1, fill = "blue"), alpha = 0.3) +
+  ggplot2::scale_fill_manual(values = c("#FF0000", "#F59404", "#18E125", "#1A1AE8", "#FAFA15")) +
   ggplot2::geom_pointrange(ggplot2::aes(x = df1$Date, y = df1$BM.BF_FS_dist.med, ymin = df1$BM.BF_FS_dist.min, ymax =  df1$BM.BF_FS_dist.max), col = "black") +
   ggplot2::xlab("Date") +
   ggplot2::ylab("Coef dissim BM-BF FS") +

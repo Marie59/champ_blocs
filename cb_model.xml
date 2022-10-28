@@ -1,33 +1,42 @@
-<tool id="cb_freq" name="Freq" version="0.0.0" profile = "20.01">
+<tool id="cb_model" name="Modelisation" version="0.0.0" profile = "20.01">
     <description>things</description>
     <requirements>
         <requirement type="package" version="1.0.10">r-dplyr</requirement>
         <requirement type="package" version="1.2.1">r-tidyr</requirement>
         <requirement type="package" version="1.14.2">r-data.table</requirement>
         <requirement type="package" version="1.4.1">r-stringr</requirement>
-        <requirement type="package" version="1.4.1">r-readxl</requirement>
-        <requirement type="package" version="3.1.8">r-tibble</requirement>
+        <requirement type="package" version="1.5_1">r-matrix</requirement>
+        <requirement type="package" version="7.3_58.1">r-mass</requirement>
+        <requirement type="package" version="1.1_18_1">r-lme4</requirement>
+        <requirement type="package" version="1.1.4">r-glmmtmb</requirement>
+        <requirement type="package" version="3.1_1">r-car</requirement>
+        <requirement type="package" version="0.10.0">r-performance</requirement>
+        <requirement type="package" version="0.4.6">r-dharma</requirement>
+        <requirement type="package" version="1.8.3">r-bestnormalize</requirement>
+        <requirement type="package" version="2.12.0">r-r.utils</requirement>
+        <requirement type="package" version="1.2_7">r-spdep</requirement>
+        <requirement type="package" version="0.0_8">r-combinat</requirement>
+        <!--<requirement type="package" version="1.4.1">r-buildmer</requirement>-->
+        <requirement type="package" version="1.46.0">r-mumin</requirement>
+        <requirement type="package" version="1.7.3">r-mgsub</requirement>
+        <!--<requirement type="package" version="1.7.3">r-diffdf</requirement>-->
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
         Rscript
-            '$__tool_directory__/cb_freq.r'
-            '$input_hab'
-            '$input_site'
-            '$input_soussite'
-            '$fiche_terr'
-            '$input_obs'
-            '$qecb'
+            '$__tool_directory__/cb_model.r'
+            '$input_qecbnato0'
+            '$input_ratiofull'
+            '$input_ratiobret'
+            '$input_ratiobasq'
             '$output_freq'
             '$plots'
         ]]>
     </command>
     <inputs>
-        <param name="input_hab" type="data" format="data" label="Input habitat"/>
-        <param name="input_site" type="data" format="data" label="Input site"/>
-        <param name="input_soussite" type="data" format="data" label="Input sub site"/>
-        <param name="fiche_terr" type="data" format="data" label="Input data field"/>
-        <param name="input_obs" type="data" format="data" label="Input data observation"/>
-        <param name="qecb" type="data" format="Rdata" label="Input clean data"/>
+        <param name="input_qecbnato0" type="data" format="data" label="Input qecbnato0"/>
+        <param name="input_ratiofull" type="data" format="data" label="Input ratiofull"/>
+        <param name="input_ratiobret" type="data" format="data" label="Input ratiobret"/>
+        <param name="input_ratiobasq" type="data" format="data" label="Input ratiobasq"/>
     </inputs>
     <outputs>
         <data name="output_freq" from_work_dir="Valeurs_stat.tabular" format="txt" label="FREQ"/>

@@ -89,12 +89,12 @@ ivr_scale$Signification <- c("Pas de bloc ou de rares blocs retournés", "Faible
 library(magrittr)
 
 qu_tbl <- flextable::flextable(ivr_scale)
-qu_tbl <- flextable::bg(qu_tbl, i = 1, bg = "blue")
-qu_tbl <- flextable::bg(qu_tbl, i = 2, bg = "olivedrab")
-qu_tbl <- flextable::bg(qu_tbl, i = 3, bg = "yellow")
-qu_tbl <- flextable::bg(qu_tbl, i = 4, bg = "gold1")
-qu_tbl <- flextable::bg(qu_tbl, i = 5, bg = "orange1")
-qu_tbl <- flextable::bg(qu_tbl, i = 6, bg = "red")
+qu_tbl <- flextable::bg(qu_tbl, i = 1, bg = "#1A1AE8")
+qu_tbl <- flextable::bg(qu_tbl, i = 2, bg = "#04F5F5")
+qu_tbl <- flextable::bg(qu_tbl, i = 3, bg = "#18E125")
+qu_tbl <- flextable::bg(qu_tbl, i = 4, bg = "#FAFA15")
+qu_tbl <- flextable::bg(qu_tbl, i = 5, bg = "#F59404")
+qu_tbl <- flextable::bg(qu_tbl, i = 6, bg = "#FF0000")
 
 qu_tbl %>% flextable::autofit() %>% flextable::fit_to_width(7)
 
