@@ -20,7 +20,7 @@
 #               magrittr
 #               rmarkdown
 library(magrittr)
-
+install.packages('adiv')
 #####Load arguments
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -33,6 +33,9 @@ if (length(args) < 1) {
     qecnato0 <- args[1]
     bret_egmp_basq_qecb <- args[2]
 }
+
+qecnato0 <- readRDS(qecnato0)
+bret_egmp_basq_qecb <- readRDS(bret_egmp_basq_qecb)
 
 ## Diversity index
 
@@ -61,8 +64,6 @@ div_list <- vector("list", length(unique(qecnato0$site_year_month_day)))
 
 for (i in c(1:nrow(qecnato0))) {
   
-  #i <- 7
-  
   div_i <- dplyr::filter(qecnato0, site_year_month_day == unique(qecnato0$site_year_month_day)[i])
   
   ifelse(unique(div_i$region) == "Bretagne", var. <- c(bret_egmp_basq_qecb), var. <- c(bret_egmp_basq_qecb, EGMP.BASQ_qecb)) # Qu. : Why can't R's ifelse statements return vectors? => you can circumvent the problem if you assign the result inside the ifelse.
@@ -74,12 +75,11 @@ for (i in c(1:nrow(qecnato0))) {
   adiv_i_df <- data.frame(div_i_speciesdiv)
   
   div_i_divparam <- adiv::divparam(div_i[, var.], q = c(0, 0.25, 0.5, 1, 2, 4, 8)) # When q increases, abundant species are overweighted compared to rare species, we thus expect that the evenness in species weights decreases.
-  #par(mfrow = c(2,1))
+
   png("diversity.png")
   par(mfrow = c (1, 1))
   plot(adiv::divparam(div_i[, var.], q = 0), main = unique(div_i$site_year_month_day))
   plot(adiv::divparam(div_i[, var.], q = 0:10), legend = FALSE, main = unique(div_i$site_year_month_day))
-  #par(mfrow = c(1,1))
   
   adiv_i_df$x <- div_i_divparam$div$`1`
   colnames(adiv_i_df)[which(colnames(adiv_i_df) == "x")] <- paste0("Para. ISD, q = ", div_i_divparam$q[1], " (equi. richness)")
@@ -99,9 +99,11 @@ for (i in c(1:nrow(qecnato0))) {
   # plot
   par(mfrow = c(3, 2))
   sapply(names(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))]), 
-         function(cname){
-           print(hist(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]], main = "", xlab = cname, breaks = length(unique(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]]))))
-         })
+         function(cname) {
+           png(paste0(cname, "_histo.png"))
+           hist(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]], main = "", xlab = cname, breaks = length(unique(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]])))
+         }
+)
   par(mfrow = c(1,1))
   
   div_list[[i]] <- adiv_i_df
@@ -122,10 +124,9 @@ div_df <- tibble::add_column(div_df, rownames. = rownames(div_df), .before = "ri
 div_df <- tidyr::separate(div_df, rownames., into = c("region.terri.", "site_year_month_day", "Quadrat.bis", "Type.Bloc", "Numéro.Bloc.échantillon", "Face"), sep = "_")
 
 # I therefore add these lines to solve that issue
-unique(div_df$region.terri.)
-unique(substring(div_df$region.terri., nchar(div_df$region.terri.)-3))
+
 div_df <- tibble::add_column(div_df, terri. = substring(div_df$region.terri., nchar(div_df$region.terri.)-3), .after = "region.terri.")
-unique(substring(div_df$region.terri., 1, nchar(div_df$region.terri.)-4))
+
 div_df$region.terri. <- substring(div_df$region.terri., 1, nchar(div_df$region.terri)-4)
 div_df <- dplyr::rename(div_df, region = region.terri.)
 
