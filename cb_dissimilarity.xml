@@ -8,8 +8,15 @@
         <requirement type="package" version="0.2.4">r-officedown</requirement>
         <requirement type="package" version="2.6_2">r-vegan</requirement>
         <requirement type="package" version="1.3.2">r-tidyverse</requirement>
+        <requirement type="package" version="0.4.4">r-officer</requirement>
+        <requirement type="package" version="0.8.1">r-flextable</requirement>
         <requirement type="package" version="3.3.6">r-ggplot2</requirement>
     </expand>
+    <required_files>
+        <include type="literal" path="test-data/champbloc_qecb.csv"/>
+        <include type="literal" path="test-data/ficheterrain.csv"/>
+        <include type="literal" path="cb_dissimilarity.r"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
         Rscript
             '$__tool_directory__/cb_dissimilarity.r'
@@ -17,8 +24,10 @@
             '$input_data'
             '$choice'
             '$choice_date'
+            '$__tool_directory__/cb_qecb_site_report_col_scale_loop.Rmd'
+            '$__tool_directory__/loop_col_scale.r'
             '$output_qecb'
-            '$output_eco'
+            '$output_matri'
             '$plots_bf'
             '$plots_bm'
             '$plots'
@@ -34,8 +43,8 @@
         <param name="choice_date" type="integer" value="2021" label="Until when do you have data (write only the YEAR) ?" help="Example write : 2021 "/>
     </inputs>
     <outputs>
-        <data name="output_qecb" from_work_dir="qecbnato0.RDS" format="Rdata" label="Clean Rdata"/>
-        <data name="output_eco" from_work_dir="bret_egmp_basq_qecb.RDS" format="Rdata" label="Bret Rdata"/>
+        <data name="output_qecb" from_work_dir="qecbnato0.RDS" format="data" label="Clean Rdata"/>
+        <data name="output_matri" from_work_dir="matri_full.RDS" format="data" label="Matrice full Rdata"/>
         <collection type="list" name="plots_bf" label="Bloc fixe et bloc mobile face sup plot">
             <discover_datasets pattern="bm(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
@@ -45,9 +54,12 @@
         <collection type="list" name="plots" label="Distance plot">
             <discover_datasets pattern="distance(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
+        <!--<collection type="list" name="output_report" label="Reports">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.docx" directory="results" visible="false" format="docx"/>
+        </collection>-->
     </outputs>
     <tests>
-        <test>
+        <test expect_num_outputs="5">
             <param name="fiche_val" value="ficheterrain.csv"/>
             <param name="input_data" value="champbloc_qecb.csv"/>
             <param name="choice" value="N"/>
@@ -57,7 +69,7 @@
                     <has_text text="E6P"/>
                 </assert_contents>
             </output>
-            <output name="output_eco">
+            <output name="output_matri">
                 <assert_contents>
                     <has_text text="6t"/>
                 </assert_contents>

@@ -20,7 +20,7 @@
 #               magrittr
 #               rmarkdown
 library(magrittr)
-install.packages('adiv')
+
 #####Load arguments
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -31,11 +31,56 @@ if (length(args) < 1) {
     stop("This tool needs at least 1 argument")
 }else {
     qecnato0 <- args[1]
-    bret_egmp_basq_qecb <- args[2]
+
 }
 
 qecnato0 <- readRDS(qecnato0)
-bret_egmp_basq_qecb <- readRDS(bret_egmp_basq_qecb)
+
+
+# first, create vector (4) for qecb and fishing by region (same as above)
+
+bret_egmp_basq_qecb <- c(
+  "X..algues.brunes",
+  "X..algues.rouges",
+  "X..algues.vertes",
+  "X..Cladophora",
+  "X..Lithophyllum",
+  "Nb.Littorina.obtusata",
+  "Nb.Gibbula.cineraria",
+  "Nb.Gibbula.pennanti",
+  "Nb.Gibbula.umbilicalis",
+  "Nb.Phallusia.mamillata",
+  "Nb.Tethya.aurantium",
+  "Nb.Spirobranchus.lamarckii.total",
+  "Nb.spirorbis.total",
+  "X..Eponges",
+  "X..Ascidies.Coloniales",
+  "X..Ascidies.Solitaires",
+  "X..Bryozoaires.Dresses",
+  "X..Balanes.Vivantes"
+  #, "X..Recouvrement.Sediment"
+  #, "X..Roche.Nue"
+  #, "X..Surface.Accolement"
+  )
+
+egmp_basq_qecb <- c("Nb.Crassostrea.gigas", "Nb.Ostrea.edulis", "X..Mytilus.sp.", "X..Hermelles", "X..Hydraires")
+
+bret_egmp_basq_fishing <- c("Nb.Cancer.pagurus..Tourteau.",
+                            "Nb.Necora.puber..Etrille.",
+                            "Nb.Carcinus.maenas..Crabe.vert.",
+                            "Nb.Nucella.lapilus..Pourpre.",
+                            "Nb.Galathea..Galathées.",
+                            "Nb.Lophozozymus.incisus..ancien.Xantho.incisus.",
+                            "Nb.Palaemon.sp..Crevette.bouquet.ou.crevette.rose.",
+                            "Nb.Haliotis.tuberculata..Ormeau.",
+                            "Nb.Littorina.littorea..Bigorneau.",
+                            "Nb.Xantho.pilipes..Xanthe.poilu.",
+                            "Nb.Mimachlamys.varia..Pétoncle.noir.")
+
+egmp_basq_fishing <- c("Nb.Eriphia.verrucosa..Crabe.verruqueux.", "Nb.Octopus.vulgaris..Poulpe.", "Nb.Paracentrotus.lividus..Oursin.", "Nb.Stramonita.haemastoma..Pourpre.bouche.de.sang.")
+
+# here I can choose to either replace spirorbis and/or spirobranchus by their log10 transformation in bret_egmp_basq_qecb vector
+bret_egmp_basq_qecb <- replace(bret_egmp_basq_qecb, bret_egmp_basq_qecb == "Nb.spirorbis.total", "log10.Nb.spirorbis.total")
 
 ## Diversity index
 
@@ -50,7 +95,7 @@ row.names(qecnato0) <- c(paste0(qecnato0$region.site_year_month_day, "_", qecnat
 
 # later on I can copy-paste above code to recreate variable names vector
 #bret_egmp_basq_qecb
-#EGMP.BASQ_qecb
+#egmp_basq_qecb
 #Bret_EGMP.BASQ_fishing
 #EGMP.BASQ_fishing
 
@@ -63,20 +108,19 @@ qecnato0$Face <- as.character(qecnato0$Face)
 div_list <- vector("list", length(unique(qecnato0$site_year_month_day)))
 
 for (i in c(1:nrow(qecnato0))) {
-  
-  div_i <- dplyr::filter(qecnato0, site_year_month_day == unique(qecnato0$site_year_month_day)[i])
-  
-  ifelse(unique(div_i$region) == "Bretagne", var. <- c(bret_egmp_basq_qecb), var. <- c(bret_egmp_basq_qecb, EGMP.BASQ_qecb)) # Qu. : Why can't R's ifelse statements return vectors? => you can circumvent the problem if you assign the result inside the ifelse.
+  div_i <- dplyr::filter(qecnato0, site_year_month_day == qecnato0$site_year_month_day[i])
+
+  ifelse(unique(div_i$region) == "Bretagne", var. <- c(bret_egmp_basq_qecb), var. <- c(bret_egmp_basq_qecb, egmp_basq_qecb)) # Qu. : Why can't R's ifelse statements return vectors? => you can circumvent the problem if you assign the result inside the ifelse.
 
   #8 remove empty row cfr: In speciesdiv(div_i[, var.]) & divparam(div_i[, var.]) : empty communities should be discarded
   div_i <- dplyr::filter(div_i, rowSums(div_i[, var.]) > 0)
-  
+
   div_i_speciesdiv <- adiv::speciesdiv(div_i[, var.])
   adiv_i_df <- data.frame(div_i_speciesdiv)
   
   div_i_divparam <- adiv::divparam(div_i[, var.], q = c(0, 0.25, 0.5, 1, 2, 4, 8)) # When q increases, abundant species are overweighted compared to rare species, we thus expect that the evenness in species weights decreases.
 
-  png("diversity.png")
+
   par(mfrow = c (1, 1))
   plot(adiv::divparam(div_i[, var.], q = 0), main = unique(div_i$site_year_month_day))
   plot(adiv::divparam(div_i[, var.], q = 0:10), legend = FALSE, main = unique(div_i$site_year_month_day))
@@ -102,7 +146,9 @@ for (i in c(1:nrow(qecnato0))) {
          function(cname) {
            png(paste0(cname, "_histo.png"))
            hist(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]], main = "", xlab = cname, breaks = length(unique(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]])))
+dev.off()
          }
+
 )
   par(mfrow = c(1,1))
   
@@ -139,4 +185,3 @@ div_df$Numéro.Bloc.échantillon <- as.integer(div_df$Numéro.Bloc.échantillon)
 
 saveRDS(div_df, "div_df.RDS")
 write.table(div_df, "Valeurs_stat.tabular", row.names = FALSE, quote = FALSE, sep = "\t", dec = ".", fileEncoding = "UTF-8")
-rm(div_i, div_list, i, var.)

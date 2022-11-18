@@ -676,8 +676,8 @@ matri.fct <- function(data., region., dataset., vars., transfo., frmla.) {
       
       tbl.[1, paste0(name., " Esti.")]  <- tryCatch((summary(glmm.gaus))$coefficients$cond[name., "Estimate"], error = function (e) (NA))
       tbl.[1, paste0(name., " SE")]  <- tryCatch((summary(glmm.gaus))$coefficients$cond[name.,"Std. Error"], error = function (e) (NA))
-      tbl.[1, paste0(name., " p")] <- tryCatch((Anova(glmm.gaus))$`Pr(>Chisq)`[rownames(Anova(glmm.gaus)) == name.], error = function (e) (NA)) #(summary(glmm.gaus))$coefficients$cond[name., "Pr(>|z|)"]
-      tbl.[1, paste0(name., " Chisq")] <- tryCatch((Anova(glmm.gaus))[name., "Chisq"], error = function (e) (NA))
+      tbl.[1, paste0(name., " p")] <- tryCatch((car::Anova(glmm.gaus))$`Pr(>Chisq)`[rownames(car::Anova(glmm.gaus)) == name.], error = function (e) (NA)) #(summary(glmm.gaus))$coefficients$cond[name., "Pr(>|z|)"]
+      tbl.[1, paste0(name., " Chisq")] <- tryCatch((car::Anova(glmm.gaus))[name., "Chisq"], error = function (e) (NA))
       tbl.[1, paste0(name., " multico.")] <- tryCatch(ifelse(is.null(glmm.gaus.multico.) == TRUE, NA, dplyr::filter(glmm.gaus.multico., Term == name.)[["VIF"]]), error = function (e) (NA))
       
       rm(name., i)
@@ -696,783 +696,6 @@ matri.fct <- function(data., region., dataset., vars., transfo., frmla.) {
   cat("\n")
   
 }  
-
-
-## test a step by step procedure
-
-get.vars.<- function() {
-  
-  buildglmm. <<- glmmTMB::glmmTMB(frmla., family = gaussian(link = "identity"), data = df.red)
-  vars.list <<- unlist(strsplit(trimws(as.character(buildglmm.[["call"]][["formula"]])), "\\s"))[c(grep("Sc.", unlist(strsplit(trimws(as.character(buildglmm.[["call"]][["formula"]])), "\\s"))))]
-  frmla.mod. <<- as.formula(paste(unlist(strsplit(trimws(as.character(buildglmm.[["call"]][["formula"]])), "\\s"))[1], paste(c(vars.list, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-  
-}
-
-
-{ 
-### BM_FS.FI_dist.tr
-
-## vars.short
-
-frmla. <- as.formula(paste("BM_FS.FI_dist.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM_FS.FI_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- tbl.
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM_FS.FI_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM_FS.FI_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join <- tibble::add_column(tbl.join, vars. = NA, .before = "region")
-tbl.join$vars. <- "vars.short"
-
-## vars.medium
-
-frmla. <- as.formula(paste("BM_FS.FI_dist.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM_FS.FI_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM_FS.FI_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM_FS.FI_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("BM_FS.FI_dist.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM_FS.FI_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM_FS.FI_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM_FS.FI_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-
-
-### BM.BF_FS_dist.tr
-
-## vars.short
-
-frmla. <- as.formula(paste("BM.BF_FS_dist.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM.BF_FS_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM.BF_FS_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM.BF_FS_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("BM.BF_FS_dist.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM.BF_FS_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM.BF_FS_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM.BF_FS_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("BM.BF_FS_dist.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM.BF_FS_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM.BF_FS_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM.BF_FS_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-
-
-### richness.tr face supérieure bloc mobile
-
-## vars.short
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-
-
-### richness.tr face inférieure bloc mobile
-
-## vars.short
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-
-
-### richness.tr face supérieure bloc fixé
-
-## vars.short
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list, transfo. = "center_scale", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-
-
-### Shannon.tr face supérieure bloc mobile
-
-## vars.short
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-
-
-### Shannon.tr face inférieure bloc mobile
-
-## vars.short
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-
-
-### Shannon.tr face supérieure bloc fixé
-
-## vars.short
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-}
-
-
-# Let's add ivr modeling next, if removed from the model.large.vs.medium.vs.short vectors
-
-{
-### blocs.retournes.fr.tr
-
-## vars.short
-
-frmla. <- as.formula(paste("blocs.retournes.fr.tr", paste(c(model.short.ivr, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("blocs.retournes.fr.tr", vars.short.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("blocs.retournes.fr.tr", vars.short.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("blocs.retournes.fr.tr", vars.short.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short.ivr", tbl.join$vars.)
-
-## vars.medium
-
-frmla. <- as.formula(paste("blocs.retournes.fr.tr", paste(c(model.medium.ivr, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("blocs.retournes.fr.tr", vars.medium.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("blocs.retournes.fr.tr", vars.medium.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("blocs.retournes.fr.tr", vars.medium.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium.ivr", tbl.join$vars.)
-
-## vars.large
-
-frmla. <- as.formula(paste("blocs.retournes.fr.tr", paste(c(model.large.ivr, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("blocs.retournes.fr.tr", vars.large.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("blocs.retournes.fr.tr", vars.large.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("blocs.retournes.fr.tr", vars.large.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list, transfo. = "orderNorm", frmla. = frmla.mod.)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod., vars.list, tbl., buildglmm.)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large.ivr", tbl.join$vars.)
-}
-
-
-tbl.models.step.by.step <- tbl.join
 
 
 ## test a dredge and model average procedure
@@ -1515,8 +738,27 @@ tbl. <<- tbl.
 
 }
 
+#for (i in 1:10) {
+ # echant1 <- sample(unique(df.$Site), 1)
+ # newdf. <- subset(df., df.$Site != echant1)
+ # echant2 <- sample(unique(newdf.$Site), 1)
+ # newdf. <- subset(newdf., newdf.$Site != echant2)
+ # echant3 <- sample(unique(newdf.$Site), 1)
+ # newdf. <- subset(newdf., newdf.$Site != echant3)
+ # echant4 <- sample(unique(newdf.$Site), 1)
+ # newdf. <- subset(newdf., newdf.$Site != echant4)
+ # echant5 <- sample(unique(newdf.$Site), 1)
+ # newdf. <- subset(newdf., newdf.$Site != echant5)
+ # echant6 <- sample(unique(newdf.$Site), 1)
+ # newdf. <- subset(newdf., newdf.$Site != echant6)
 
-{
+
+echant1 <- "EGMP_PerreAntiochat"
+echant2 <- ""
+echant3 <- ""
+echant4 <- ""
+newdf. <- subset(df., df.$Site != echant1)
+
 ### BM_FS.FI_dist.tr
 
 ## vars.short
@@ -1524,7 +766,7 @@ tbl. <<- tbl.
 frmla. <- as.formula(paste("BM_FS.FI_dist.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM_FS.FI_dist.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc == "Bloc mobile")[, c("BM_FS.FI_dist.tr", vars.short)])
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- tbl.
@@ -1532,97 +774,11 @@ matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. =
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM_FS.FI_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM_FS.FI_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
 tbl.join <- tibble::add_column(tbl.join, vars. = NA, .before = "region")
 tbl.join$vars. <- "vars.short"
+
 tbl.join <- tibble::add_column(tbl.join, M.1vs2 = NA, .before = "region")
-tbl.join$M.1vs2 <- c("M1","M2","M1","M2","M1","M2")
-
-## vars.medium
-
-frmla. <- as.formula(paste("BM_FS.FI_dist.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM_FS.FI_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM_FS.FI_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM_FS.FI_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("BM_FS.FI_dist.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM_FS.FI_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM_FS.FI_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM_FS.FI_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM_FS.FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
+tbl.join$M.1vs2 <- c("M1","M2")
 
 ### BM.BF_FS_dist.tr
 
@@ -1632,103 +788,16 @@ tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M
 frmla. <- as.formula(paste("BM.BF_FS_dist.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM.BF_FS_dist.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc == "Bloc mobile")[, c("BM.BF_FS_dist.tr", vars.short)])
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM.BF_FS_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM.BF_FS_dist.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
 tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.medium
-
-frmla. <- as.formula(paste("BM.BF_FS_dist.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM.BF_FS_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM.BF_FS_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM.BF_FS_dist.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("BM.BF_FS_dist.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("BM.BF_FS_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("BM.BF_FS_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("BM.BF_FS_dist.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "BM.BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
+tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 
 ### richness.tr face supérieure bloc mobile
 
@@ -1737,104 +806,16 @@ tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M
 frmla. <- as.formula(paste("richness.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("richness.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("richness.tr", vars.short)])#
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
 tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.medium
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-
+tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 ### richness.tr face inférieure bloc mobile
 
 ## vars.short
@@ -1842,103 +823,16 @@ tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M
 frmla. <- as.formula(paste("richness.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("richness.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("richness.tr", vars.short)])
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
 tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.medium
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BM_FI", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
+tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 
 ### richness.tr face supérieure bloc fixé
 
@@ -1947,103 +841,16 @@ tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M
 frmla. <- as.formula(paste("richness.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("richness.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("richness.tr", vars.short)])
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
 tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.medium
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("richness.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("richness.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list.M1, transfo. = "center_scale", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "richness BF_FS", vars. = vars.list.M2, transfo. = "center_scale", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
+tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 
 ### Shannon.tr face supérieure bloc mobile
 
@@ -2052,103 +859,16 @@ tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M
 frmla. <- as.formula(paste("Shannon.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
 tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.medium
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
+tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 
 ### Shannon.tr face inférieure bloc mobile
 
@@ -2157,103 +877,16 @@ tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M
 frmla. <- as.formula(paste("Shannon.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("Shannon.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("Shannon.tr", vars.short)])
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
 tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.medium
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Face == "face inférieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne", Face == "face inférieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ", Face == "face inférieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BM_FI", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
+tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 
 ### Shannon.tr face supérieure bloc fixé
 
@@ -2262,236 +895,45 @@ tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M
 frmla. <- as.formula(paste("Shannon.tr", paste(c(model.short, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("Shannon.tr", vars.short)])
+df.red <- na.omit(dplyr::filter(newdf., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("Shannon.tr", vars.short)])
 get.vars.()
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
 tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
 rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.short)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
+tbl.models.dredge.modavg <- tbl.join
+#rm(tbl.join)
 
 tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
+tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 
-## vars.medium
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.medium, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.medium)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("Shannon.tr", paste(c(model.large, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "Bretagne", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc %in% c("Bloc fixé", "Roche en place"), Region == "EGMP.BASQ", Face == "face supérieure")[, c("Shannon.tr", vars.large)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "Shannon BF_FS", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-}
 
 
 # Let's add ivr modeling next, if removed from the model.large.vs.short vectors
 
-{
+
 ### blocs.retournes.fr.tr
 
 ## vars.short
 
-frmla. <- as.formula(paste("blocs.retournes.fr.tr", paste(c(model.short.ivr, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
+#frmla. <- as.formula(paste("blocs.retournes.fr.tr", paste(c(model.short.ivr, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
 
 # Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("blocs.retournes.fr.tr", vars.short.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
+#df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("blocs.retournes.fr.tr", vars.short.ivr)])
+#get.vars.()
+#matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
+#tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
+#matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
+#tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
+#rm(df.red, frmla.mod.M1,Does frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
 
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("blocs.retournes.fr.tr", vars.short.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("blocs.retournes.fr.tr", vars.short.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short.ivr", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.medium
-
-frmla. <- as.formula(paste("blocs.retournes.fr.tr", paste(c(model.medium.ivr, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("blocs.retournes.fr.tr", vars.medium.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("blocs.retournes.fr.tr", vars.medium.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("blocs.retournes.fr.tr", vars.medium.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.medium.ivr", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-
-## vars.large
-
-frmla. <- as.formula(paste("blocs.retournes.fr.tr", paste(c(model.large.ivr, "(1|Site/Numero.Quadrat)"), sep = "", collapse = " + "), sep = " ~ "))
-
-# Atlantique
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile")[, c("blocs.retournes.fr.tr", vars.large.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Atlantique", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# Bretagne
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "Bretagne")[, c("blocs.retournes.fr.tr", vars.large.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "Bretagne", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-# EGMP.BASQ
-df.red <- na.omit(dplyr::filter(df., Type.Bloc == "Bloc mobile", Region == "EGMP.BASQ")[, c("blocs.retournes.fr.tr", vars.large.ivr)])
-get.vars.()
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list.M1, transfo. = "orderNorm", frmla. = frmla.mod.M1) ; sw_to_tbl.(M1.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-matri.fct(data. = df.red, region. = "EGMP.BASQ", dataset. = "blocs.retournes.fr.", vars. = vars.list.M2, transfo. = "orderNorm", frmla. = frmla.mod.M2) ; sw_to_tbl.(M2.sw)
-tbl.join <- dplyr::bind_rows(tbl.join, tbl.)
-rm(df.red, frmla.mod.M1, frmla.mod.M2, M1, M2, vars.list.M1, vars.list.M2, tbl., DredgeOutput, M1.sw, M2.sw)
-
-tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.large.ivr", tbl.join$vars.)
-tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-5):length(tbl.join$M.1vs2))/2)
-}
+#tbl.join$vars. <- ifelse(is.na(tbl.join$vars.), "vars.short.ivr", tbl.join$vars.)
+#tbl.join$M.1vs2[(length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2)] <- rep(c("M1","M2"), length((length(tbl.join$M.1vs2)-1):length(tbl.join$M.1vs2))/2)
 
 
-tbl.models.dredge.modavg <- tbl.join
-rm(tbl.join)
 
-
-## work on individual model df. prior joining them
-
-step_by_step <- tbl.models.step.by.step
-
-step_by_step <- tibble::add_column(step_by_step, approche = "step by step", .before = "vars.")
-step_by_step <- tibble::add_column(step_by_step, `ef. fix p<.05` = NA, .before = "formule")
-step_by_step <- tibble::add_column(step_by_step, `n ef. fix p<.05` = NA, .before = "ef. fix p<.05")
-
-for (i in c(1:nrow(step_by_step))) {
-  df.i. <- step_by_step[i,]
-  step_by_step[i, "ef. fix p<.05"] <- paste0(apply(df.i.[,grep('Sc..* p', names(df.i.), value = TRUE)] < .05, 1, function(x) names(which(x))), collapse = ", ")
-  step_by_step[i, "n ef. fix p<.05"] <- length(apply(df.i.[,grep('Sc..* p', names(df.i.), value = TRUE)] < .05, 1, function(x) names(which(x))))
-}
-
-tbl.models.step.by.step <- step_by_step
-rm(step_by_step, df.i.)
-
-model_average <- tbl.models.dredge.modavg
+model_average <- tbl.join
 
 model_average <- tibble::add_column(model_average, approche = "model average", .before = "vars.")
 model_average <- tibble::add_column(model_average, `ef. fix p<.05` = NA, .before = "formule")
@@ -2509,7 +951,8 @@ rm(model_average, df.i.)
 
 ## df with model results of both approaches
 
-tbl.models <- dplyr::bind_rows(tbl.models.dredge.modavg, tbl.models.step.by.step)
+#tbl.models <- dplyr::bind_rows(tbl.models.dredge.modavg, tbl.models.step.by.step)
+tbl.models <- tbl.models.dredge.modavg
 
 tbl.models[] <- lapply(tbl.models, gsub, pattern = "Sc.blocs.retournes.fr.", replacement = "IBFI", fixed = TRUE)
 tbl.models[] <- lapply(tbl.models, gsub, pattern = "Sc.Period.nb", replacement = "period", fixed = TRUE)
@@ -2521,7 +964,7 @@ tbl.models[] <- lapply(tbl.models, gsub, pattern = "Sc.accessibilite.gp.nb", rep
 tbl.models[] <- lapply(tbl.models, gsub, pattern = "Sc.frequentation.gp.nb", replacement = "qual.freq.", fixed = TRUE)
 
 tbl.models$`ef. fix p<.05` <- gsub(tbl.models$`ef. fix p<.05`, pattern = " p", replacement = "", fixed = TRUE)
-tbl.models$`ef. fix p<.05` <- gsub(tbl.models$`ef. fix p<.05`, pattern = "eriod", replacement = " period", fixed = TRUE)
+tbl.models$`ef. fix p<.05` <- gsub(tbl.models$`ef. fix p<.05`, pattern = "period", replacement = " period", fixed = TRUE)
 
 var.names <- names(tbl.models)
 var.names <- gsub(var.names, pattern = "Sc.blocs.retournes.fr.", replacement = "IBFI", fixed = TRUE)
@@ -2535,5 +978,10 @@ var.names <- gsub(var.names, gsub, pattern = "Sc.frequentation.gp.nb", replaceme
 
 colnames(tbl.models) <- var.names
 names(tbl.models)
+
+write.table(tbl.models, file = paste0(echant1, echant2, echant3, echant4, ".tabular"), sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE, quote = FALSE)
+rm(echant1, echant2, echant3, echant4, newdf.)
+#}
+#write.table(tbl.models, file = "Models.tabular", sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 saveRDS(tbl.models, "tbl.models.RDS")

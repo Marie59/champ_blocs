@@ -1205,7 +1205,7 @@ egmp_basq_fishing <- c("Nb.Eriphia.verrucosa..Crabe.verruqueux.", "Nb.Octopus.vu
 
 # here I can choose to either replace spirorbis and/or spirobranchus by their log10 transformation in bret_egmp_basq_qecb vector
 bret_egmp_basq_qecb <- replace(bret_egmp_basq_qecb, bret_egmp_basq_qecb == "Nb.spirorbis.total", "log10.Nb.spirorbis.total")
-saveRDS(bret_egmp_basq_qecb, "bret_egmp_basq_qecb.RDS")
+
 
 
 #############################################################
@@ -1641,7 +1641,7 @@ matri_full$Site_bis <- ifelse(matri_full$Site == "FINS_Mousterlin", "Pointe de M
 matri_full$Site_bis <- ifelse(matri_full$Site == "FINS_StNicolasGlenan", "Saint-Nicolas des Glénan", matri_full$Site_bis)
 matri_full$Site_bis <- ifelse(matri_full$Site == "FINS_AnseRoz", "Pointe de l'Anse du Roz", matri_full$Site_bis)
 
-
+saveRDS(matri_full, "matri_full.RDS")
 
 #############################################################
 #                                                           #
@@ -1654,7 +1654,7 @@ matri_full$Year <- as.integer(matri_full$Year)
 matri_full$Month <- as.integer(matri_full$Month)
 matri_full$Day <- as.integer(matri_full$Day)
 
-
+indic <- matri_full
 ## BM_FS.FI_dist => mobile boulder upper vs lower faces
 
 # Stats
@@ -1663,6 +1663,7 @@ bm_fs_fi_dist_stat <- matri_full %>% dplyr::group_by(Site, Site_bis, Date, Year,
 
 bm_fs_fi_dist_stat <- dplyr::ungroup(bm_fs_fi_dist_stat)
 
+indic_bm <- bm_fs_fi_dist_stat
 # Quality scale based on quartiles
 
 if (choice == "N") {
@@ -1712,6 +1713,7 @@ bm_bf_fs_dist_stat <- matri_full %>% dplyr::group_by(Site, Site_bis, Date, Year,
 
 bm_bf_fs_dist_stat <- dplyr::ungroup(bm_bf_fs_dist_stat)
 
+indic_fs <- bm_bf_fs_dist_stat
 # Quality scale based on quartiles
 
 if (choice == "N") {
@@ -1751,3 +1753,7 @@ ggplot2::ggsave(paste0("bm_bf_", df1$Site, ".png"), device = "png", bm_bf_fs_plo
 }
 
 rm(df1, four, i, one, three, two, xmax_, xmin_, ymax_, ymin_)
+
+
+report <- args[5]
+loop_file <- source(args[6])

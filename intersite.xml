@@ -1,0 +1,92 @@
+<tool id="cb_intersite" name="Intersites" version="@VERSION@" profile = "20.01">
+    <description>comparaison</description>
+    <macros>
+        <import>macro.xml</import>
+    </macros>
+    <expand macro="cb_requirements">
+        <requirement type="package" version="3.3.6">r-ggplot2</requirement>
+        <requirement type="package" version="1.4.1">r-readxl</requirement>
+    </expand>
+    <required_files>
+        <include type="literal" path="test-data"/>
+        <include type="literal" path="test-data"/>
+        <include type="literal" path="test-data"/>
+        <include type="literal" path="test-data"/>
+        <include type="literal" path="intersite.r"/>
+        <include type="literal" path="freq.RDS"/>
+        <include type="literal" path="obs.RDS"/>
+        <include type="literal" path="list_date_mean.RDS"/>
+    </required_files>
+    <command detect_errors="exit_code"><![CDATA[
+        Rscript
+            '$__tool_directory__/intersite.r'
+            '$input_qecbnato0'
+            '$input_ivr'
+            '$input_dissim'
+            '$input_div'
+            '$__tool_directory__/freq.RDS'
+            '$__tool_directory__/obs.RDS'
+            '$__tool_directory__/list_date_mean.RDS'
+            '$output_table'
+            '$plots'
+        ]]>
+    </command>
+    <inputs>
+        <param name="input_qecbnato0" type="data" format="data" label="Input clean Rdata"/>
+        <param name="input_ivr" type="data" format="data" label="Ivr Rdata"/>
+        <param name="input_dissim" type="data" format="data" label="Matrice full Rdata"/>
+        <param name="input_div" type="data" format="data" label="Diversity Rdata"/>
+    </inputs>
+    <outputs>
+        <data name="output_table" from_work_dir="effort.tabular" format="tabular" label="Effort table"/>
+        <collection type="list" name="plots" label="Intersites plot">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+    </outputs>
+    <tests>
+        <test expect_num_outputs="2">
+            <param name="input_qecbnato0" value="Clean_Rdata.Rdata"/>
+            <param name="input_ivr" value="IVR_Rdata.Rdata"/>
+            <param name="input_dissim" value="Matrice_full_Rdata.Rdata"/>
+            <param name="input_div" value="Diversity_Rdata.Rdata"/>
+            <output name="output_table">
+                <assert_contents>
+                    <has_n_columns n="32"/>
+                </assert_contents>
+            </output>
+            <output_collection name="plots" type="list" count="11"/>
+        </test>
+    </tests>
+    <help><![CDATA[
+=====================
+Intersites comparison
+=====================
+
+
+**What it does**
+
+Compare indicators between sites. ⚠️ Warning ! The frequentation, the fishermen behavior and the oceano graphs are plotted for data stopping on april 2021 ! ⚠️
+
+**Input description**
+
+Four input files in RDS format from previous tools (ivr, dissimilarity and diversity)
+
++----------------+------------------+-------------------+-----------------+
+|      Rdata     |       Rdata      |       Rdata       |       Rdata     |
++================+==================+===================+=================+
+|   Clean Rdata  |    Ivr Rdata     |Matrice full Rdata | Diversity Rdata |
++----------------+------------------+-------------------+-----------------+
+|       ...      |        ...       |        ...        |        ...      |
++----------------+------------------+-------------------+-----------------+
+
+
+**Output**
+
+- 1 tabular  for the effort
+- Multiple png plots one for each of the indicators
+
+
+
+    ]]>    </help>
+        <expand macro="cb_bibref"/>
+</tool>

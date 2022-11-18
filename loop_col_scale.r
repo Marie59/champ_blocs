@@ -1,7 +1,6 @@
 library("rmarkdown")
 
 df <- indic
-df_full <- indic_full
 dir.create("results")
 slices <- unique(df$Site)[!is.na(unique(df$Site))]
 

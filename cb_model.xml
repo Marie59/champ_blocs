@@ -8,7 +8,6 @@
         <requirement type="package" version="1.4.1">r-stringr</requirement>
         <requirement type="package" version="1.5_1">r-matrix</requirement>
         <requirement type="package" version="7.3_58.1">r-mass</requirement>
-        <!--<requirement type="package" version="1.1_18_1">r-lme4</requirement>-->
         <requirement type="package" version="1.1.4">r-glmmtmb</requirement>
         <requirement type="package" version="3.1_1">r-car</requirement>
         <requirement type="package" version="0.10.0">r-performance</requirement>
@@ -17,37 +16,36 @@
         <requirement type="package" version="2.12.0">r-r.utils</requirement>
         <requirement type="package" version="1.2_7">r-spdep</requirement>
         <requirement type="package" version="0.0_8">r-combinat</requirement>
-        <!--<requirement type="package" version="1.4.1">r-buildmer</requirement>-->
         <requirement type="package" version="1.46.0">r-mumin</requirement>
         <requirement type="package" version="1.7.3">r-mgsub</requirement>
         <requirement type="package" version="4.7_1">r-hmisc</requirement>
         <requirement type="package" version="2.0.4">r-performanceanalytics</requirement>
-        <!--<requirement type="package" version="1.7.3">r-diffdf</requirement>-->
     </requirements>
+    <required_files>
+        <include type="literal" path="cb_model.r"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
         Rscript
             '$__tool_directory__/cb_model.r'
             '$input_qecbnato0'
-            '$output_model'
-            '$plots'
+            '$output_model_rdata'
+            '$output_tbl'
         ]]>
     </command>
     <inputs>
         <param name="input_qecbnato0" type="data" format="data" label="Input qecbnato0"/>
     </inputs>
     <outputs>
-        <data name="output_model" from_work_dir="tbl.models.RDS" format="Rdata" label="Models table Rdata"/>
-        <collection type="list" name="plots" label="Modelisation plot">
-            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        <data name="output_model_rdata" from_work_dir="tbl.models.RDS" format="Rdata" label="Models table Rdata"/>
+        <!--<data name="output_tbl" from_work_dir="Models.tabular" format="tabular" label="Models table"/>-->
+        <collection type="list" name="output_tbl" label="Resample tabular">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.tabular" visible="false" format="tabular"/>
         </collection>
     </outputs>
     <tests>
-        <test>
+        <test expect_num_outputs="3">
             <param name="input_data" value=""/>
-            <param name="input_data2" value=""/>
-            <param name="fiche_val" value=""/>
-            <param name="fiche_term" value=""/>
-            <output name="output_freq">
+            <output name="output_model">
                 <assert_contents>
                     <has_n_columns n="3"/>
                 </assert_contents>
