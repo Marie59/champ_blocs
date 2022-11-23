@@ -18,6 +18,7 @@
             '$input_obs'
             '$qecb'
             '$output_freq'
+            '$output_obs'
             '$plots'
         ]]>
     </command>
@@ -30,7 +31,8 @@
         <param name="qecb" type="data" format="Rdata" label="Input clean data"/>
     </inputs>
     <outputs>
-        <data name="output_freq" from_work_dir="Valeurs_stat.tabular" format="txt" label="FREQ"/>
+        <data name="output_freq" from_work_dir="freq.RDS" format="Rdata" label="Frequentation Rdata"/>
+        <data name="output_obs" from_work_dir="obs.RDS" format="Rdata" label="Observations Rdata"/>
         <collection type="list" name="plots" label="FREQ plot">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>

@@ -737,27 +737,56 @@ sw_to_tbl. <- function(sw.df) {
 tbl. <<- tbl.
 
 }
+c <- 1
+for (i in 1:10) {
+  echant1 <- sample(unique(df.$Site), 1)
+  newdf. <- subset(df., df.$Site != echant1)
+  echant2 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant2)
+  echant3 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant3)
+  echant4 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant4)
+  echant5 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant5)
+  echant6 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant6)
+  echant7 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant7)
+  echant8 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant8)
+  echant9 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant9)
+  echant10 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant10)
+  echant11 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant11)
+  echant12 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant12)
+  echant13 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant13)
+  echant14 <- sample(unique(newdf.$Site), 1)
+  newdf. <- subset(newdf., newdf.$Site != echant14)
+# echant15 <- sample(unique(newdf.$Site), 1)
+#  newdf. <- subset(newdf., newdf.$Site != echant15)
+#  echant16 <- sample(unique(newdf.$Site), 1)
+#  newdf. <- subset(newdf., newdf.$Site != echant16)
+#  echant17 <- sample(unique(newdf.$Site), 1)
+#  newdf. <- subset(newdf., newdf.$Site != echant17)
+#  echant18 <- sample(unique(newdf.$Site), 1)
+#  newdf. <- subset(newdf., newdf.$Site != echant18)
 
-#for (i in 1:10) {
- # echant1 <- sample(unique(df.$Site), 1)
- # newdf. <- subset(df., df.$Site != echant1)
- # echant2 <- sample(unique(newdf.$Site), 1)
- # newdf. <- subset(newdf., newdf.$Site != echant2)
- # echant3 <- sample(unique(newdf.$Site), 1)
- # newdf. <- subset(newdf., newdf.$Site != echant3)
- # echant4 <- sample(unique(newdf.$Site), 1)
- # newdf. <- subset(newdf., newdf.$Site != echant4)
- # echant5 <- sample(unique(newdf.$Site), 1)
- # newdf. <- subset(newdf., newdf.$Site != echant5)
- # echant6 <- sample(unique(newdf.$Site), 1)
- # newdf. <- subset(newdf., newdf.$Site != echant6)
 
-
-echant1 <- "EGMP_PerreAntiochat"
-echant2 <- ""
-echant3 <- ""
-echant4 <- ""
-newdf. <- subset(df., df.$Site != echant1)
+#echant1 <- "FINS_StNicolasGlenan"
+#echant2 <- "EGMP_PasEmsembert"
+#echant3 <- "FINS_Mousterlin"
+#echant4 <- "EGMP_GroinCou"
+#echant5 <- ""
+#echant6 <- ""
+#newdf. <- subset(df., df.$Site != echant1)
+#newdf. <- subset(df., df.$Site != echant2)
+#newdf. <- subset(df., df.$Site != echant3)
+#newdf. <- subset(df., df.$Site != echant4)
 
 ### BM_FS.FI_dist.tr
 
@@ -979,9 +1008,16 @@ var.names <- gsub(var.names, gsub, pattern = "Sc.frequentation.gp.nb", replaceme
 colnames(tbl.models) <- var.names
 names(tbl.models)
 
-write.table(tbl.models, file = paste0(echant1, echant2, echant3, echant4, ".tabular"), sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE, quote = FALSE)
-rm(echant1, echant2, echant3, echant4, newdf.)
-#}
+del_sites <- paste0(echant1, echant2, echant3, echant4, echant5, echant6, echant7, echant8, echant9, echant10, echant11, echant12, echant13, echant14)
+
+
+
+write.table(tbl.models, file = paste0(c, ".tabular"), sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE, quote = FALSE)
+write.table(del_sites, file = paste0(c, "deleted_sites, .tabular"), sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE, quote = FALSE)
+c <- c + 1
+rm(echant1, echant2, echant3, echant4, echant5, echant6, echant7, echant8, echant9, echant10, echant11, echant12, echant13, echant14, newdf.)
+}
+
 #write.table(tbl.models, file = "Models.tabular", sep = "\t", dec = ".", na = " ", row.names = FALSE, col.names = TRUE, quote = FALSE)
 
 saveRDS(tbl.models, "tbl.models.RDS")
