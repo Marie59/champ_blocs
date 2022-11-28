@@ -24,7 +24,7 @@
             '$input_ivr'
             '$input_dissim'
             '$input_div'
-            '$__tool_directory__/freq.RDS'
+            '$input_freq'
             '$__tool_directory__/obs.RDS'
             '$__tool_directory__/list_date_mean.RDS'
             '$output_table'
@@ -36,6 +36,7 @@
         <param name="input_ivr" type="data" format="data" label="Ivr Rdata"/>
         <param name="input_dissim" type="data" format="data" label="Matrice full Rdata"/>
         <param name="input_div" type="data" format="data" label="Diversity Rdata"/>
+        <param name="input_freq" type="data" format="data" label="Freq Rdata"/>
     </inputs>
     <outputs>
         <data name="output_table" from_work_dir="effort.tabular" format="tabular" label="Effort table"/>

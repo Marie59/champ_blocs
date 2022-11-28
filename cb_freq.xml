@@ -7,6 +7,7 @@
         <requirement type="package" version="1.4.1">r-stringr</requirement>
         <requirement type="package" version="1.4.1">r-readxl</requirement>
         <requirement type="package" version="3.1.8">r-tibble</requirement>
+        <requirement type="package" version="3.3.6">r-ggplot2</requirement>
     </requirements>
     <command detect_errors="exit_code"><![CDATA[
         Rscript
@@ -31,8 +32,8 @@
         <param name="qecb" type="data" format="Rdata" label="Input clean data"/>
     </inputs>
     <outputs>
-        <data name="output_freq" from_work_dir="freq.RDS" format="Rdata" label="Frequentation Rdata"/>
-        <data name="output_obs" from_work_dir="obs.RDS" format="Rdata" label="Observations Rdata"/>
+        <data name="output_freq" from_work_dir="freq.RDS" format="data" label="Frequentation Rdata"/>
+        <data name="output_obs" from_work_dir="obs.RDS" format="data" label="Observations Rdata"/>
         <collection type="list" name="plots" label="FREQ plot">
             <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>

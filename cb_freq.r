@@ -266,7 +266,7 @@ names(df.)
 
 df. <- dplyr::arrange(df., Site, date.sortie, repl.)
 freq. <- data.frame(df.)
-freq. <- freq.[, c(3:6,14,15,1,2,7:13,16:28)]
+freq. <- freq.[, c(3:6, 14, 15, 1, 2, 7:13, 16:28)]
 rm(df.)
 
 
@@ -338,7 +338,7 @@ for (i in c(1:length(unique(freq.[, "Site"])))) {
   xmax. <- as.Date(ifelse(max(freq.i$Annee, na.rm = T) <= 2017, as.Date("2018-01-01", origin = "1970-01-01"), as.Date(paste0((Ymax.+1), "-01-01"), origin = "1970-01-01")), origin = "1970-01-01")
   
   # I have to invert plot(x,y) by plot(y,x) in order to work ... ?
-  png(paste0("freq_1", unique(freq.i$Site), ".png"))
+  png(paste0("freq_1_", unique(freq.i$Site), ".png"))
   plot(freq.i$date.sortie, rep(0, length(freq.i$date.sortie)), 
        xlim = c(xmin., xmax.), 
        ylim = c(-8, 165)
@@ -464,7 +464,7 @@ for (i in c(1:length(na.omit(unique(freq.Nb.Total.stat[, "Site"]))))) {
   dplyr::filter(freq.Nb.Total.stat, Site == unique(freq.Nb.Total.stat[, "Site"])[i]) -> freq.i
   
   # I have to invert plot(x,y) by plot(y,x) in order to work ... ?
-  png(paste0("freq_2", unique(freq.i$Site), ".png"))
+  png(paste0("freq_2_", unique(freq.i$Site), ".png"))
   plot(freq.i$Annee_semester_to.nb, rep(0, length(freq.i$Annee_semester_to.nb)), 
        xlim = c(1, length(unique(freq.Nb.Total.stat$Annee_semester_to.nb))),
        ylim = c(-5, 200)#c(0-(
@@ -615,7 +615,7 @@ qecbNew <- readRDS(input_qecb)
 )]))
 (df.join <- dplyr::left_join(df.join, df., by = "code.site"))
 df.join <- df.join[!(df.join$code.site == "ARMO_042-043" & df.join$Site == "ARMO_Piegu"),]
-df.join <- df.join[!(df.join$zone.habitat == "Les Flots Bleus (champ de blocs) - zone pàªcheurs" & df.join$Site == "BASQ_FlotsBleusZF"),]
+df.join <- df.join[!(df.join$zone.habitat == "Les Flots Bleus (champ de blocs) - zone pècheurs" & df.join$Site == "BASQ_FlotsBleusZF"),]
 df.join <- df.join[!(df.join$zone.habitat == "Les Flots Bleus (champ de blocs) - zone famille" & df.join$Site == "BASQ_FlotsBleusZP"),]
 
 library(data.table)
@@ -624,7 +624,8 @@ for (i in c(1:nrow(df.join))) {
   setDT(obs.)[code.site == df.join[i, "code.site"], Site := df.join[i,"Site"]]
 }
 obs. <- data.frame(obs.)
-obs.$Site <- ifelse(obs.$code.site == "BASQ_01" & obs.$zone.habitat == "Les Flots Bleus (champ de blocs) - zone pàªcheurs", "BASQ_FlotsBleusZP", obs.$Site)
+
+obs.$Site <- ifelse(obs.$code.site == "BASQ_01" & obs.$zone.habitat == "Les Flots Bleus (champ de blocs) - zone pècheurs", "BASQ_FlotsBleusZP", obs.$Site)
 
 rm(df.join)
 rm(df.)

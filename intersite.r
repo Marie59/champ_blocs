@@ -107,14 +107,13 @@ saveRDS(qecbnato0_bm_fi_stats_site_accol, "qecbnato0_bm_fi_stats_site_accol.RDS"
 # frequentation
 
 freq_$Site <- as.character(freq_$Site)
-freq_$Site <- ifelse(freq_$Site == "ARMO_Piégu / Verdelet", "ARMO_Piegu.Verdelet", freq_$Site)
-
-ARMO_Piegu.Verdelet <- dplyr::filter(freq_, Site == "ARMO_Piegu.Verdelet")
-ARMO_Piegu <- ARMO_Piegu.Verdelet
-ARMO_Verdelet <- ARMO_Piegu.Verdelet
-ARMO_Piegu$Site <- "ARMO_Piegu"
-ARMO_Verdelet$Site <- "ARMO_Verdelet"
-ARMO_Piegu.Verdelet <- dplyr::bind_rows(ARMO_Piegu, ARMO_Verdelet)
+#freq_$Site <- ifelse(freq_$Site == "ARMO_Piégu / Verdelet", "ARMO_Piegu.Verdelet", freq_$Site)
+#ARMO_Piegu.Verdelet <- dplyr::filter(freq_, Site == "ARMO_Piegu.Verdelet")
+#ARMO_Piegu <- ARMO_Piegu.Verdelet
+#ARMO_Verdelet <- ARMO_Piegu.Verdelet
+#ARMO_Piegu$Site <- "ARMO_Piegu"
+#ARMO_Verdelet$Site <- "ARMO_Verdelet"
+#ARMO_Piegu.Verdelet <- dplyr::bind_rows(ARMO_Piegu, ARMO_Verdelet)
 
 
 BASQ_FlotsBleus <- dplyr::filter(freq_, Site == "BASQ_FlotsBleus")
@@ -125,7 +124,7 @@ BASQ_FlotsBleusZP$Site <- "BASQ_FlotsBleusZP"
 BASQ_FlotsBleus <- dplyr::bind_rows(BASQ_FlotsBleusZF, BASQ_FlotsBleusZP)
 
 freq_$Site <- as.factor(freq_$Site)
-ARMO_Piegu.Verdelet$Site <- as.factor(ARMO_Piegu.Verdelet$Site)
+#ARMO_Piegu.Verdelet$Site <- as.factor(ARMO_Piegu.Verdelet$Site)
 BASQ_FlotsBleus$Site <- as.factor(BASQ_FlotsBleus$Site)
 
 # create a unique freq_ df. with duplicated Piegu-Verdelet and FlotsBleus frequentation data
@@ -134,9 +133,9 @@ freq_$Site <- as.character(freq_$Site)
 
 `%notin%` <- Negate(`%in%`)
 
-freq_new <- freq_ %>% dplyr::filter(Site %notin% c("ARMO_Piegu.Verdelet", "BASQ_FlotsBleus"))
+freq_new <- freq_ %>% dplyr::filter(Site %notin%  "BASQ_FlotsBleus")
 
-freq_new <- dplyr::bind_rows(freq_new, ARMO_Piegu.Verdelet)
+#freq_new <- dplyr::bind_rows(freq_new, ARMO_Piegu.Verdelet)
 
 freq_new <- dplyr::bind_rows(freq_new, BASQ_FlotsBleus)
 
@@ -144,28 +143,7 @@ freq_new <- dplyr::arrange(freq_new, Site)
 freq_new$Site <- as.factor(freq_new$Site)
 
 
-freq_new$Site <- factor(freq_new$Site, levels = c("GONB_IlotStMichel",
-                                                  "ARMO_Piegu",
-                                                  "ARMO_Verdelet",
-                                                  "ARMO_Bilfot",
-                                                  "ARMO_IlePlate", 
-                                                  "PDMO_Perharidy",
-                                                  "FINS_Quemenes",  
-                                                  "BRES_Keraliou",
-                                                  "FINS_SeinGoulenez",
-                                                  "FINS_SeinKilaourou",
-                                                  "FINS_Mousterlin",
-                                                  "FINS_StNicolasGlenan",
-                                                  "GDMO_Locmariaquer",
-                                                  "GDMO_BegLann",
-                                                  "FOUR_PlateauFour",
-                                                  "EGMP_GroinCou",
-                                                  "EGMP_PasEmsembert",
-                                                  "EGMP_PerreAntiochat",
-                                                  "EGMP_Chassiron",
-                                                  "EGMP_BreeBains",
-                                                  "BASQ_FlotsBleusZP",
-                                                  "BASQ_FlotsBleusZF"))
+freq_new$Site <- factor(freq_new$Site)
 
 stat_freq_new <- freq_new %>% dplyr::group_by(Site) %>% dplyr::tally()
 freq_min5 <- dplyr::filter(freq_new, Site %notin% c(as.vector(unlist((dplyr::filter(stat_freq_new, n < 5))["Site"]))))
@@ -207,28 +185,7 @@ freq_new$Site <- as.factor(freq_new$Site)
 freq_new$Site_bis <- as.factor(freq_new$Site_bis)
 
 
-freq_new$Site <- factor(freq_new$Site, levels = c("GONB_IlotStMichel",
-"ARMO_Piegu",
-"ARMO_Verdelet",
-"ARMO_Bilfot",
-"ARMO_IlePlate", 
-"PDMO_Perharidy",
-"FINS_Quemenes",  
-"BRES_Keraliou",
-"FINS_SeinGoulenez",
-"FINS_SeinKilaourou",
-"FINS_Mousterlin",
-"FINS_StNicolasGlenan",
-"GDMO_Locmariaquer",
-"GDMO_BegLann",
-"FOUR_PlateauFour",
-"EGMP_GroinCou",
-"EGMP_PasEmsembert",
-"EGMP_PerreAntiochat",
-"EGMP_Chassiron",
-"EGMP_BreeBains",
-"BASQ_FlotsBleusZP",
-"BASQ_FlotsBleusZF"))
+freq_new$Site <- factor(freq_new$Site)
 
 stat_freq_new <- freq_new %>% dplyr::group_by(Site) %>% dplyr::tally()
 freq_min5 <- dplyr::filter(freq_new, Site %notin% c(as.vector(unlist((dplyr::filter(stat_freq_new, n < 5))["Site"]))))
@@ -651,8 +608,8 @@ effort$param. <- ordered(effort$param., levels = c("BM", "BF", "BM.BF_FS_dist.",
 effort <- effort[with(effort, order(Site, param.)),]
 names(effort)
 # add 2012_s1 column
-effort <- tibble::add_column(effort, `2012_s1` = NA, .after = "2011_s2")
-effort$`2012_s1` <- as.integer(effort$`2012_s1`)
+#effort <- tibble::add_column(effort, `2012_s1` = NA, .after = "2011_s2")
+#effort$`2012_s1` <- as.integer(effort$`2012_s1`)
 
 effort$semester <- rowSums(!is.na(effort[, 3:ncol(effort)]))
 effort$effort <- rowSums(effort[, 3:(ncol(effort) - 1)], na.rm = TRUE)
