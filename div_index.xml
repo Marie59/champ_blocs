@@ -33,7 +33,7 @@
     </outputs>
     <tests>
         <test expect_num_outputs="3">
-            <param name="input_data" value="Clean_Rdata.Rdata"/>
+            <param name="input_data" value="Clean_Rdata.data"/>
             <output name="output_div">
                 <assert_contents>
                     <has_n_columns n="20"/>

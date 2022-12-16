@@ -9,6 +9,14 @@
         <requirement type="package" version="3.1.8">r-tibble</requirement>
         <requirement type="package" version="3.3.6">r-ggplot2</requirement>
     </requirements>
+    <required_files>
+        <include type="literal" path="test-data/frequentation_habitat.csv"/>
+        <include type="literal" path="test-data/frequentation_site.csv"/>
+        <include type="literal" path="test-data/frequentation_soussite.csv"/>
+        <include type="literal" path="test-data/ficheterrain_freq.csv"/>
+        <include type="literal" path="test-data/champ_bloc_observation.csv"/>
+        <include type="literal" path="cb_freq.r"/>
+    </required_files>
     <command detect_errors="exit_code"><![CDATA[
         Rscript
             '$__tool_directory__/cb_freq.r'
@@ -17,39 +25,53 @@
             '$input_soussite'
             '$fiche_terr'
             '$input_obs'
+            '$fiche'
             '$qecb'
             '$output_freq'
             '$output_obs'
-            '$plots'
+            '$plots_freq'
+            '$plots_obs'
         ]]>
     </command>
     <inputs>
-        <param name="input_hab" type="data" format="data" label="Input habitat"/>
-        <param name="input_site" type="data" format="data" label="Input site"/>
-        <param name="input_soussite" type="data" format="data" label="Input sub site"/>
-        <param name="fiche_terr" type="data" format="data" label="Input data field"/>
-        <param name="input_obs" type="data" format="data" label="Input data observation"/>
-        <param name="qecb" type="data" format="Rdata" label="Input clean data"/>
+        <param name="input_hab" type="data" format="data" label="Input frequentation_habitat.csv"/>
+        <param name="input_site" type="data" format="data" label="Input frequentation_site.csv"/>
+        <param name="input_soussite" type="data" format="data" label="Input frequentation_soussite.csv"/>
+        <param name="fiche_terr" type="data" format="data" label="Input ficheterrain.csv" help="You have to take the ficheterrain.csv from the 'Suivi de la fréquentation des pêcheurs' folder of Estamp"/>
+        <param name="input_obs" type="data" format="data" label="Input champ_bloc_observation.csv"/>
+        <param name="fiche" type="data" format="data" label="Input ficheterrain.csv" help="You have to take the ficheterrain.csv from the 'Suivi des champs de blocs' folder of Estamp"/>
+        <param name="qecb" type="data" format="data" label="Input Clean Rdata"/>
     </inputs>
     <outputs>
         <data name="output_freq" from_work_dir="freq.RDS" format="data" label="Frequentation Rdata"/>
         <data name="output_obs" from_work_dir="obs.RDS" format="data" label="Observations Rdata"/>
-        <collection type="list" name="plots" label="FREQ plot">
-            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        <collection type="list" name="plots_freq" label="Frequentation plots">
+            <discover_datasets pattern="freq_(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
+        </collection>
+        <collection type="list" name="plots_obs" label="Comportement plots">
+            <discover_datasets pattern="obs_(?P&lt;designation&gt;.+)\.png" visible="false" format="png"/>
         </collection>
     </outputs>
     <tests>
-        <test>
-            <param name="input_data" value=""/>
-            <param name="input_data2" value=""/>
-            <param name="fiche_val" value=""/>
-            <param name="fiche_term" value=""/>
+        <test expect_num_outputs="4">
+            <param name="input_hab" value="frequentation_habitat.csv"/>
+            <param name="input_site" value="frequentation_site.csv"/>
+            <param name="input_soussite" value="frequentation_soussite.csv"/>
+            <param name="fiche_terr" value="ficheterrain_freq.csv"/>
+            <param name="input_obs" value="champ_bloc_observation.csv"/>
+            <param name="qecb" value="Clean_Rdata.data"/>
             <output name="output_freq">
                 <assert_contents>
-                    <has_n_columns n="3"/>
+                    <has_text text="cwE"/>
                 </assert_contents>
             </output>
-            <output_collection name="plots" type="list" count="3"/>
+            <output name="output_obs">
+                <assert_contents>
+                    <has_text text="cwE"/>
+                </assert_contents>
+            </output>
+            <output_collection name="plots_freq" type="list" count="17"/>
+            <output_collection name="plots_obs" type="list" count="16"/>
         </test>
     </tests>
     <help><![CDATA[
@@ -60,15 +82,14 @@ Fisher men frequentation
 
 **What it does**
 
-Calculates the Visual Boulder Turning Indicator (VTI), which is similar to a "landscape" indicator to assess fishing pressure based on architectural criteria.
-Based on the proportion of "turned" and "not turned" blocs this indicator vary from 0 to 5 and can be quickly used.
+Calculates the fisher men frequentation for each sites.
 
 **Input description**
 
 TWO input files in csv format.
 
 +---------------+------------------+
-|      CSV      |        CSV       |
+|      Rdata    |       Rdata      |
 +===============+==================+
 | champbloc.csv | ficheterrain.csv |
 +---------------+------------------+
@@ -78,7 +99,7 @@ TWO input files in csv format.
 
 **Output**
 
-- .RDS file 1 of them for the ivr
+- .RDS files 2 of them for the frequentatio and observation
 - Multiple png plots one for each of the locations
 
 

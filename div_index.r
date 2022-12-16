@@ -144,7 +144,7 @@ for (i in c(1:nrow(qecnato0))) {
   par(mfrow = c(3, 2))
   sapply(names(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))]), 
          function(cname) {
-           png(paste0(cname, "_histo.png"))
+           png(paste0(cname, ".png"))
            hist(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]], main = "", xlab = cname, breaks = length(unique(adiv_i_df[, c(1, 8, 2, 3, 12, 4:7, 9:11, 13:ncol(adiv_i_df))][[cname]])))
 dev.off()
          }

@@ -156,7 +156,7 @@ p_freq <- ggplot2::ggplot(freq_new, ggplot2::aes(x = Site, y = Fr_Nb)) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
   ggplot2::geom_boxplot(data = freq_min5, ggplot2::aes(x = Site, y = Fr_Nb)) + 
   ggplot2::geom_point(data = freq_inf5, ggplot2::aes(x = Site, y = Fr_Nb)) 
-ggplot2::ggsave("5_Frequentation_2021.png", p_freq)
+ggplot2::ggsave("5_Frequentation.png", p_freq)
 
 # plot frequentation data with missing site
 
@@ -198,11 +198,11 @@ p_freq <- ggplot2::ggplot(freq_new, ggplot2::aes(x = Site, y = Fr_Nb)) +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
   ggplot2::geom_boxplot(data = freq_min5, ggplot2::aes(x = Site, y = Fr_Nb)) + 
   ggplot2::geom_point(data = freq_inf5, ggplot2::aes(x = Site, y = Fr_Nb)) 
-ggplot2::ggsave("5_Frequentation_na_2021.png", p_freq)
+ggplot2::ggsave("5_Frequentation_na.png", p_freq)
 
 freq_new_stats_site_fr_nb <- na.omit(freq_new[, c("Site", "Fr_Nb")]) %>% dplyr::group_by(Site) %>% dplyr::summarise(min. = min(Fr_Nb), max. = max(Fr_Nb), mean. = mean(Fr_Nb), median. = median(Fr_Nb), nb = dplyr::n())
 freq_new_stats_site_fr_nb %>% print(n = nrow(freq_new_stats_site_fr_nb))
-saveRDS(freq_new_stats_site_fr_nb, "freq_new_stats_site_fr_nb.RDS")
+#saveRDS(freq_new_stats_site_fr_nb, "freq_new_stats_site_fr_nb.RDS")
 
 freq_new_stats_effort <- na.omit(freq_new[, c("Site", "Annee_semester")]) %>% dplyr::group_by(Site, Annee_semester) %>% dplyr::summarize(nb. = dplyr::n())
 freq_new_stats_effort <- freq_new_stats_effort %>% tidyr::spread(Annee_semester, nb.)
@@ -218,16 +218,16 @@ freq_new <- dplyr::filter(freq_new, Site %notin% c("FINS_Quemenes", "FINS_SeinGo
 
 stat_obs_ <- obs_ %>% dplyr::group_by(Site) %>% dplyr::tally()
 
-obs_ <- dplyr::filter(obs_, Nb.Blocs.Retournes.remis.norm15min >= 0)
+obs_ <- dplyr::filter(obs_, all(obs_$Nb.Blocs.Retournes.remis.norm15min) >= 0)
 
-p_obs_cpt <- ggplot2::ggplot(obs_, ggplot2::aes(x = Site, y = ratio.norm15min.obs)) +
+p_obs_cpt <- ggplot2::ggplot(obs_, ggplot2::aes(x = Site, y = ratio_norm15min.obs)) +
   ggplot2::geom_boxplot() + 
   ggplot2::xlab("") +
   ggplot2::ylab("Comportement des pêcheurs") +
   ggplot2::labs(subtitle = "1 : Bad behavior don't put the block back \n0 : Good behavior put the block back") +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 
-ggplot2::ggsave("6_Comportement_pecheurs_2021.png", p_obs_cpt)
+ggplot2::ggsave("6_Comportement_pecheurs.png", p_obs_cpt)
 
 # plot comportment data with missing site
 
@@ -248,25 +248,25 @@ obs_ <- dplyr::left_join(obs_, obs_sitebis, by = "Site")
 obs_ <- dplyr::arrange(obs_, Site)
 obs_$Site <- as.factor(obs_$Site)
 
-obs_$Site <- factor(obs_$Site, levels = c("GONB_IlotStMichel", "ARMO_Piegu", "ARMO_Verdelet", "ARMO_Bilfot", "ARMO_IlePlate", "PDMO_Perharidy", "FINS_Quemenes", "BRES_Keraliou", "FINS_SeinGoulenez", "FINS_SeinKilaourou", "FINS_Mousterlin", "FINS_StNicolasGlenan", "GDMO_Locmariaquer", "GDMO_BegLann", "FOUR_PlateauFour", "EGMP_GroinCou", "EGMP_PasEmsembert", "EGMP_PerreAntiochat", "EGMP_Chassiron", "EGMP_BreeBains", "BASQ_FlotsBleusZP", "BASQ_FlotsBleusZF"))
+obs_$Site <- factor(obs_$Site)
 
 stat_obs_ <- obs_ %>% dplyr::group_by(Site) %>% dplyr::tally()
 dplyr::arrange(stat_obs_, n)
 obs_min5 <- dplyr::filter(obs_, Site %notin% c(as.vector(unlist((dplyr::filter(stat_obs_, n < 5))["Site"]))))
 obs_inf5 <- dplyr::filter(obs_, Site %notin% c(as.vector(unlist((dplyr::filter(stat_obs_, n >= 5))["Site"]))))
 
-p_obs_cpt <- ggplot2::ggplot(obs_, ggplot2::aes(x = Site, y = ratio.norm15min.obs)) + 
+p_obs_cpt <- ggplot2::ggplot(obs_, ggplot2::aes(x = Site, y = ratio_norm15min.obs)) + 
   ggplot2::geom_blank() +
   #ggplot2::geom_jitter(shape = 16, position = position_jitter(0.2), color = "gray") +
   ggplot2::xlab("") +
   ggplot2::ylab("comportement (échelle relative)") +
   ggplot2::labs(subtitle = "1 : Bad behavior don't put the block back \n0 : Good behavior put the block back") +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
-  ggplot2::geom_boxplot(data = obs_min5, ggplot2::aes(x = Site, y = ratio.norm15min.obs)) + 
-  ggplot2::geom_point(data = obs_inf5, ggplot2::aes(x = Site, y = ratio.norm15min.obs)) 
-ggplot2::ggsave("6_Comportement_pecheurs_na_2021.png", p_obs_cpt)
+  ggplot2::geom_boxplot(data = obs_min5, ggplot2::aes(x = Site, y = ratio_norm15min.obs)) + 
+  ggplot2::geom_point(data = obs_inf5, ggplot2::aes(x = Site, y = ratio_norm15min.obs)) 
+ggplot2::ggsave("6_Comportement_pecheurs_na.png", p_obs_cpt)
 
-obs_stats_site_ratio <- na.omit(obs_[, c("Site", "ratio.norm15min.obs")]) %>% dplyr::group_by(Site) %>% dplyr::summarise(min. = min(ratio.norm15min.obs), max. = max(ratio.norm15min.obs), mean. = mean(ratio.norm15min.obs), median. = median(ratio.norm15min.obs), nb = dplyr::n())
+obs_stats_site_ratio <- na.omit(obs_[, c("Site", "ratio_norm15min.obs")]) %>% dplyr::group_by(Site) %>% dplyr::summarise(min. = min(obs_$ratio_norm15min.obs), max. = max(obs_$ratio_norm15min.obs), mean. = mean(obs_$ratio_norm15min.obs), median. = median(obs_$ratio_norm15min.obs), nb = dplyr::n())
 saveRDS(obs_stats_site_ratio, "obs_stats_site_ratio.RDS")
 
 obs_ <- tidyr::separate(obs_, date.sortie, into = c("Year", "Month", "Day"), remove = FALSE)

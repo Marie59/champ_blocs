@@ -8,12 +8,12 @@
         <requirement type="package" version="1.4.1">r-readxl</requirement>
     </expand>
     <required_files>
-        <include type="literal" path="test-data"/>
-        <include type="literal" path="test-data"/>
-        <include type="literal" path="test-data"/>
-        <include type="literal" path="test-data"/>
+        <include type="literal" path="test-data/Clean_Rdata.Rdata"/>
+        <include type="literal" path="test-data/Diversity_Rdata.Rdata"/>
+        <include type="literal" path="test-data/IVR_Rdata.Rdata"/>
+        <include type="literal" path="test-data/Matrice_full_Rdata.Rdata"/>
+        <include type="literal" path="test-data/frequentation_Rdata.Rdata"/>
         <include type="literal" path="intersite.r"/>
-        <include type="literal" path="freq.RDS"/>
         <include type="literal" path="obs.RDS"/>
         <include type="literal" path="list_date_mean.RDS"/>
     </required_files>
@@ -25,18 +25,19 @@
             '$input_dissim'
             '$input_div'
             '$input_freq'
-            '$__tool_directory__/obs.RDS'
+            '$input_obs'
             '$__tool_directory__/list_date_mean.RDS'
             '$output_table'
             '$plots'
         ]]>
     </command>
     <inputs>
-        <param name="input_qecbnato0" type="data" format="data" label="Input clean Rdata"/>
+        <param name="input_qecbnato0" type="data" format="data" label="Input Clean Rdata"/>
         <param name="input_ivr" type="data" format="data" label="Ivr Rdata"/>
         <param name="input_dissim" type="data" format="data" label="Matrice full Rdata"/>
         <param name="input_div" type="data" format="data" label="Diversity Rdata"/>
-        <param name="input_freq" type="data" format="data" label="Freq Rdata"/>
+        <param name="input_freq" type="data" format="data" label="Frequentation Rdata"/>
+        <param name="input_obs" type="data" format="data" label="Observations Rdata"/>
     </inputs>
     <outputs>
         <data name="output_table" from_work_dir="effort.tabular" format="tabular" label="Effort table"/>
@@ -46,13 +47,14 @@
     </outputs>
     <tests>
         <test expect_num_outputs="2">
-            <param name="input_qecbnato0" value="Clean_Rdata.Rdata"/>
-            <param name="input_ivr" value="IVR_Rdata.Rdata"/>
-            <param name="input_dissim" value="Matrice_full_Rdata.Rdata"/>
-            <param name="input_div" value="Diversity_Rdata.Rdata"/>
+            <param name="input_qecbnato0" value="Clean_Rdata.data"/>
+            <param name="input_ivr" value="IVR_Rdata.data"/>
+            <param name="input_dissim" value="Matrice_full_Rdata.data"/>
+            <param name="input_div" value="Diversity_Rdata.data"/>
+            <param name="input_freq" value="Frequentation_Rdata.data"/>
             <output name="output_table">
                 <assert_contents>
-                    <has_n_columns n="32"/>
+                    <has_n_columns n="22"/>
                 </assert_contents>
             </output>
             <output_collection name="plots" type="list" count="11"/>
@@ -66,7 +68,7 @@ Intersites comparison
 
 **What it does**
 
-Compare indicators between sites. ⚠️ Warning ! The frequentation, the fishermen behavior and the oceano graphs are plotted for data stopping on april 2021 ! ⚠️
+Compare indicators between sites. ⚠️ Warning ! The oceano graphs are plotted for data stopping on april 2021 ! ⚠️
 
 **Input description**
 
