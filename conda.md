@@ -13,7 +13,7 @@
 > - Taper ``grayskull pypi NOM_PACKAGE``
 >
 > Votre recette est ainsi générée vous pouvez la trouver dans vos dossiers. 
-> <details-title>Vérifications</details-title>
+> > <details-title>Vérifications</details-title>
 > > Il faut vérifier (à la fin) que le `recipe maintainers` contient bien votre identifiant github et la license renseigner est bien la bonne.
 > {: .details}
 ## 2. Créer la recette sans Pypi (à la main)
