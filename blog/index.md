@@ -8,7 +8,7 @@ date: "2023-01-26"
 
 # A bit of context : what is a boulder field?
 
-Sea boulder fields on the west coast of France are accumulations of bedrock blocks that have gathered on beaches. These fields can expand on several kilometers and are accessible depending on the tides. They are typically found in sandy, rocky, and coastal environments and can provide a challenging terrain to traverse.
+Sea boulder fields on the west coast of France are accumulations of bedrock blocks that have gathered on beaches. These fields can expand on several kilometers and are accessible depending on the tides. They are typically found in sandy, rocky, and coastal environments and can provide a challenging terrain to traverse. Anyway, see for yourself a picture is worth a thousand words. 
 
 <div>
 
@@ -27,7 +27,7 @@ In particular, these projects have made it possible to develop a network of invo
 
 <div class="float-right">
 
-![Galaxy logo](galaxy_project_logo.png)
+![Galaxy logo](galaxy_project_logo.png =10x50)
 
 </div>
 
