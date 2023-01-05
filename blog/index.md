@@ -33,9 +33,9 @@ In particular, these projects have made it possible to develop a network of invo
 
 The implementation of said tools for evaluating the ecological status and pressure of fishing on foot in Galaxy allow an easy access to 2 indicators :
 
-- the Visual Boulder Turning Indicator (VTI), which is similar to a "landscape" indicator to assess fishing pressure based on architectural criteria [IVR](toolshed.g2.bx.psu.edu/repos/ecology/cb_ivr/cb_ivr/0.0.0);
+- the Visual Boulder Turning Indicator (IVR), which is similar to a "landscape" indicator to assess fishing pressure based on architectural criteria [IVR](toolshed.g2.bx.psu.edu/repos/ecology/cb_ivr/cb_ivr/0.0.0);
 
-- the Boulder Field Ecological Quality Index (BFEQ) - which gives variables that respond to the disturbance "boulder turning" [QECB-dissimilarity](toolshed.g2.bx.psu.edu/repos/ecology/cb_dissim/cb_dissim/0.0.0.).
+- the Boulder Field Ecological Quality Index (QECB) - which gives variables that respond to the disturbance "boulder turning" [QECB-dissimilarity](toolshed.g2.bx.psu.edu/repos/ecology/cb_dissim/cb_dissim/0.0.0.).
 
 This last indicator can be combine with a third tool giving common biodiversity indicators (shannon, simpson,...) using the r package adiv [Diversity](toolshed.g2.bx.psu.edu/repos/ecology/cb_div).
 
