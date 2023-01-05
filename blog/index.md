@@ -27,8 +27,8 @@ In particular, these projects have made it possible to develop a network of invo
 
 <div class="float-right">
 
-![Galaxy logo](galaxy_project_logo.png =10x50)
-
+<Galaxy logo src="galaxy_project_logo.png" widht="10" height="50">
+  
 </div>
 
 The implementation of said tools for evaluating the ecological status and pressure of fishing on foot in Galaxy allow an easy access to 2 indicators :
